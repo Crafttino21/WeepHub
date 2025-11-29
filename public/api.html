@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeepHub API Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.16);
+      --accent: #7ce7ff;
+      --accent-2: #8b5cf6;
+      --text-muted: #b6c2d9;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 20% 20%, rgba(124, 231, 255, 0.12), transparent 25%),
+        radial-gradient(circle at 80% 0%, rgba(139, 92, 246, 0.25), transparent 30%),
+        radial-gradient(circle at 60% 70%, rgba(124, 231, 255, 0.18), transparent 25%),
+        var(--bg);
+      color: #e6ecf5;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 16px;
+    }
+    .card-soft {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 20px;
+      width: 100%;
+      max-width: 960px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    }
+    .glow-btn {
+      background: linear-gradient(135deg, #7ce7ff, #8b5cf6);
+      border: none;
+      color: #041727;
+      font-weight: 600;
+      box-shadow: 0 12px 35px rgba(124, 231, 255, 0.35);
+      width: 100%;
+      border-radius: 10px;
+      transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+    .glow-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 45px rgba(139, 92, 246, 0.45);
+    }
+    .glow-btn:active {
+      transform: translateY(0);
+    }
+    .form-label {
+      font-weight: 600;
+      color: #dfe6f4;
+    }
+    .form-control,
+    .form-select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(124, 231, 255, 0.25);
+      border-radius: 12px;
+      color: #f4f7ff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease;
+    }
+    .form-select option {
+      background: #0c1018;
+      color: #e6ecf5;
+    }
+    .form-control:focus,
+    .form-select:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(124, 231, 255, 0.9);
+      box-shadow: 0 0 0 0.15rem rgba(124, 231, 255, 0.25);
+      color: #fff;
+    }
+    .form-control::placeholder {
+      color: rgba(230, 236, 245, 0.65);
+    }
+    /* Custom select (shadcn-like) */
+    .select-trigger {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(124, 231, 255, 0.25);
+      background: rgba(255, 255, 255, 0.06);
+      color: #f4f7ff;
+      padding: 10px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+    .select-trigger:hover {
+      border-color: rgba(124, 231, 255, 0.5);
+    }
+    .select-trigger.open {
+      border-color: rgba(124, 231, 255, 0.9);
+      box-shadow: 0 0 0 0.15rem rgba(124, 231, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .select-menu {
+      position: absolute;
+      width: 100%;
+      margin-top: 6px;
+      background: rgba(12, 16, 24, 0.95);
+      border: 1px solid rgba(124, 231, 255, 0.25);
+      border-radius: 12px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(6px);
+      z-index: 20;
+      overflow: hidden;
+    }
+    .select-option {
+      padding: 10px 12px;
+      color: #e6ecf5;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: background 120ms ease;
+    }
+    .select-option:hover,
+    .select-option.active {
+      background: rgba(124, 231, 255, 0.1);
+    }
+    .select-label {
+      font-weight: 600;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .link-btn {
+      color: #dce4f5;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .api-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 14px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .api-card h6 {
+      margin: 0;
+    }
+    .muted {
+      color: var(--text-muted);
+    }
+    .add-tile {
+      border: 1px dashed rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.04);
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 140ms ease, background 140ms ease;
+    }
+    .add-tile:hover {
+      border-color: rgba(124, 231, 255, 0.8);
+      background: rgba(124, 231, 255, 0.08);
+    }
+    .token-chip {
+      font-family: "Fira Code", monospace;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: #dfe6f4;
+      word-break: break-all;
+    }
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .fieldset-card {
+      border: 1px dashed rgba(124, 231, 255, 0.3);
+      padding: 14px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel">
+    const { useEffect, useState, useCallback } = React;
+
+    const translations = {
+      en: {
+        title: "API Management",
+        subtitle: "Manage integration credentials",
+        back: "Back",
+        add_api: "Add API",
+        vendor: "Vendor",
+        label: "Label",
+        token: "Token",
+        save: "Save",
+        saving: "Saving...",
+        saved: "Saved.",
+        token_required: "Token required",
+        custom_soon: "Custom Integrations coming soon.",
+        smartthings_placeholder: "SmartThings Personal Access Token",
+        api_token_placeholder: "API Token",
+        active: "Active",
+        updated: "Updated"
+      },
+      de: {
+        title: "API Management",
+        subtitle: "Verwalte Integrations-Zugangsdaten",
+        back: "Zurück",
+        add_api: "API hinzufügen",
+        vendor: "Vendor",
+        label: "Label",
+        token: "Token",
+        save: "Speichern",
+        saving: "Speichere...",
+        saved: "Gespeichert.",
+        token_required: "Token erforderlich",
+        custom_soon: "Custom-Integrationen kommen bald.",
+        smartthings_placeholder: "SmartThings Personal Access Token",
+        api_token_placeholder: "API Token",
+        active: "Aktiv",
+        updated: "Aktualisiert"
+      }
+    };
+
+    const t = (lang, key) => translations[lang]?.[key] ?? translations.en[key] ?? key;
+
+    const authClient = (() => ({
+      async status() {
+        const res = await fetch("/api/user/status", { credentials: "include" });
+        if (!res.ok) throw new Error("status failed");
+        return res.json();
+      }
+    }))();
+
+    const apiClient = (() => ({
+      async getSmartThings() {
+        const res = await fetch("/api/integrations/smartthings", { credentials: "include" });
+        if (!res.ok) throw new Error("load failed");
+        return res.json();
+      },
+      async saveSmartThings(token, label) {
+        const res = await fetch("/api/integrations/smartthings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ token, label })
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "save failed");
+        return res.json();
+      }
+    }))();
+
+    const VendorSelect = ({ value, onChange }) => {
+      const [open, setOpen] = useState(false);
+      const options = [
+        { value: "smartthings", label: "SmartThings" },
+        { value: "custom", label: "Custom (Coming soon)" }
+      ];
+
+      useEffect(() => {
+        const handler = (e) => {
+          if (!e.target.closest(".vendor-select")) setOpen(false);
+        };
+        document.addEventListener("click", handler);
+        return () => document.removeEventListener("click", handler);
+      }, []);
+
+      const current = options.find((o) => o.value === value) || options[0];
+
+      return (
+        <div className="vendor-select position-relative">
+          <button
+            type="button"
+            className={`select-trigger ${open ? "open" : ""}`}
+            onClick={() => setOpen((p) => !p)}
+            aria-haspopup="listbox"
+            aria-expanded={open}
+          >
+            <span className="select-label">{current.label}</span>
+            <i className="bi bi-chevron-down"></i>
+          </button>
+          {open && (
+            <div className="select-menu" role="listbox">
+              {options.map((opt) => (
+                <div
+                  key={opt.value}
+                  className={`select-option ${opt.value === value ? "active" : ""}`}
+                  role="option"
+                  aria-selected={opt.value === value}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setOpen(false);
+                  }}
+                >
+                  <span>{opt.label}</span>
+                  {opt.value === value && <i className="bi bi-check2"></i>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const App = () => {
+      const getInitialLang = () => {
+        const match = document.cookie.match(/lang=([a-z]{2})/i);
+        const langVal = match?.[1];
+        return langVal && ["de", "en"].includes(langVal.toLowerCase()) ? langVal.toLowerCase() : "en";
+      };
+      const [lang] = useState(getInitialLang);
+      const [loading, setLoading] = useState(true);
+      const [saving, setSaving] = useState(false);
+      const [msg, setMsg] = useState("");
+      const [entries, setEntries] = useState([]);
+      const [newLabel, setNewLabel] = useState("SmartThings");
+      const [newToken, setNewToken] = useState("");
+      const [vendor, setVendor] = useState("smartthings");
+
+      const ensureAuth = useCallback(async () => {
+        const status = await authClient.status();
+        if (!status.authenticated) {
+          window.location.href = "/";
+          return false;
+        }
+        return true;
+      }, []);
+
+      const loadData = useCallback(async () => {
+        const ok = await ensureAuth();
+        if (!ok) return;
+        try {
+          setLoading(true);
+          const data = await apiClient.getSmartThings();
+          setEntries(data.entries || []);
+        } catch (e) {
+          setMsg(e.message || t(lang, "token_required"));
+        } finally {
+          setLoading(false);
+        }
+      }, [ensureAuth]);
+
+      useEffect(() => {
+        loadData();
+      }, [loadData]);
+
+      const handleSaveNew = async () => {
+        if (vendor === "custom") {
+          setMsg(t(lang, "custom_soon"));
+          return;
+        }
+        if (!newToken.trim()) {
+          setMsg(t(lang, "token_required"));
+          return;
+        }
+        setSaving(true);
+        setMsg("");
+        try {
+          const res = await apiClient.saveSmartThings(newToken.trim(), newLabel.trim() || "SmartThings");
+          setEntries(res.entries || []);
+          setNewToken("");
+          setMsg(t(lang, "saved"));
+        } catch (e) {
+          setMsg(e.message || t(lang, "save"));
+        } finally {
+          setSaving(false);
+        }
+      };
+
+      const handleToggle = async (id, enabled) => {
+        setMsg("");
+        try {
+          setSaving(true);
+          const res = await fetch(`/api/integrations/smartthings/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ enabled })
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Update failed");
+          const data = await res.json();
+          setEntries(data.entries || []);
+        } catch (e) {
+          setMsg(e.message || t(lang, "save"));
+        } finally {
+          setSaving(false);
+        }
+      };
+
+      const handleBack = () => {
+        window.location.href = "/dashboard";
+      };
+
+      return (
+        <div className="card-soft">
+          <div className="top-row mb-2">
+            <div>
+              <div className="fs-5 fw-bold">{t(lang, "title")}</div>
+              <div className="text-secondary small">{t(lang, "subtitle")}</div>
+            </div>
+            <a className="link-btn" href="#" onClick={(e) => { e.preventDefault(); handleBack(); }}>
+              <i className="bi bi-arrow-left"></i> {t(lang, "back")}
+            </a>
+          </div>
+          <div className="grid">
+            <div className="api-card add-tile d-flex" onClick={() => {}}>
+              <div className="w-100 fieldset-card">
+                <div className="fw-semibold mb-2 text-center">{t(lang, "add_api")}</div>
+                <div className="mb-2">
+                  <label className="form-label">{t(lang, "vendor")}</label>
+                  <VendorSelect
+                    value={vendor}
+                    onChange={(v) => {
+                      setVendor(v);
+                      setNewLabel(v === "smartthings" ? "SmartThings" : "Custom");
+                    }}
+                  />
+                </div>
+                <div className="mb-2">
+                  <label className="form-label">{t(lang, "label")}</label>
+                  <input
+                    className="form-control"
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    placeholder="SmartThings Account"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">{t(lang, "token")}</label>
+                  <input
+                    className="form-control"
+                    value={newToken}
+                    onChange={(e) => setNewToken(e.target.value)}
+                    placeholder={vendor === "smartthings" ? t(lang, "smartthings_placeholder") : t(lang, "api_token_placeholder")}
+                    disabled={vendor === "custom"}
+                  />
+                </div>
+                <button className="btn glow-btn" onClick={handleSaveNew} disabled={saving || loading}>
+                  {saving ? t(lang, "saving") : t(lang, "save")}
+                </button>
+              </div>
+            </div>
+
+            {entries.map((entry) => (
+              <div className="api-card" key={entry.id}>
+                <div className="d-flex align-items-start justify-content-between">
+                  <div>
+                    <h6 className="fw-semibold mb-1">{entry.label || "SmartThings"}</h6>
+                    <div className="muted small">{t(lang, "updated")}: {new Date(entry.updatedAt || Date.now()).toLocaleString()}</div>
+                  </div>
+                  <div className="switch">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={entry.enabled}
+                      onChange={(e) => handleToggle(entry.id, e.target.checked)}
+                      id={`toggle-${entry.id}`}
+                    />
+                    <label className="form-check-label text-secondary small" htmlFor={`toggle-${entry.id}`}>{t(lang, "active")}</label>
+                  </div>
+                </div>
+                <div>
+                  <div className="muted small mb-1">Token</div>
+                  <div className="token-chip">{entry.token}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {msg && <div className="mt-3 text-info small">{msg}</div>}
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
