@@ -311,6 +311,47 @@
       color: #7ce7ff;
     }
 
+    .lang-toggle {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      overflow: hidden;
+      min-width: 118px;
+      height: 38px;
+    }
+    .lang-toggle button {
+      position: relative;
+      z-index: 1;
+      border: none;
+      background: transparent;
+      color: #b6c2d9;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      transition: all 150ms ease;
+      width: 50%;
+    }
+    .lang-toggle button.active {
+      color: #041727;
+    }
+    .lang-toggle .pill {
+      position: absolute;
+      inset: 4px;
+      width: calc(50% - 4px);
+      background: linear-gradient(135deg, #7ce7ff, #8b5cf6);
+      border-radius: 999px;
+      box-shadow: 0 10px 24px rgba(124, 231, 255, 0.35);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .lang-toggle.en .pill {
+      transform: translateX(100%);
+    }
+
     .modal-backdrop-custom {
       position: fixed;
       inset: 0;
@@ -352,25 +393,6 @@
   <div class="floating-shape s2" style="bottom: -120px; right: -60px;"></div>
 
   <div class="container py-4">
-    <div class="hero mb-4">
-      <div class="row align-items-center">
-        <div class="col-lg-8">
-          <p class="mb-2 text-uppercase text-light small fw-semibold" style="letter-spacing: 0.06em;">
-            WeepHub Control
-          </p>
-          <h1 class="display-5 fw-bold mb-3">Smart Home, aber fancy.</h1>
-          <p class="lead mb-0" style="max-width: 700px; color: var(--text-muted);">
-            Verbinde deine SmartLife Steckdosen, sieh Status und schalte sie mit sanften Animationen. Bereit für alle weiteren Geräte.
-          </p>
-        </div>
-        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-          <button class="btn add-button px-4 py-2" data-bs-toggle="offcanvas" data-bs-target="#addDeviceDrawer">
-            <i class="bi bi-plus-lg me-2"></i>Gerät hinzufügen
-          </button>
-        </div>
-      </div>
-    </div>
-
     <div id="root"></div>
   </div>
 
@@ -411,31 +433,154 @@
       };
     })();
 
-    const formatRelativeTime = (timestamp) => {
+    const translations = {
+      de: {
+        hero_kicker: "WeepHub Control",
+        hero_title: "Smart Home, aber fancy.",
+        hero_subtitle: "Verbinde deine SmartLife Steckdosen, sieh Status und schalte sie mit sanften Animationen. Bereit für alle weiteren Geräte.",
+        add_device_btn: "Gerät hinzufügen",
+        drawer_title: "Gerät hinzufügen",
+        drawer_subtitle: "Füge SmartLife oder andere Geräte hinzu.",
+        field_name: "Name",
+        field_room: "Raum",
+        field_type: "Typ",
+        field_brand: "Brand",
+        placeholder_name: "z.B. Wohnzimmer Steckdose",
+        placeholder_room: "Wohnzimmer",
+        type_socket: "Steckdose",
+        type_light: "Licht",
+        type_sensor: "Sensor",
+        unknown_room: "Unbekannt",
+        unknown_device: "Unbekanntes Gerät",
+        error_missing_name: "Name fehlt",
+        error_add: "Fehler beim Hinzufügen",
+        btn_create: "Anlegen",
+        btn_saving: "Speichere...",
+        search_placeholder: "Geräte suchen...",
+        online_only: "Nur Online",
+        status_online: "Online",
+        status_offline: "Offline",
+        toggle_on: "An",
+        toggle_off: "Aus",
+        brand_default: "SmartThings",
+        loading_devices: "Lade SmartThings Geräte...",
+        error_load_devices: "Konnte Geräte nicht laden",
+        error_toggle: "Schalten fehlgeschlagen",
+        devices_empty: "Keine Geräte gefunden.",
+        activity_title: "Letzte Aktionen",
+        activity_subtitle: "Schalten & Online-Status werden live geloggt.",
+        activity_live: "Live",
+        activity_col_device: "Gerät",
+        activity_col_action: "Aktion",
+        activity_col_time: "Zeit",
+        activity_empty: "Noch keine Aktionen.",
+        activity_clear: "Log leeren",
+        activity_clearing: "Leere...",
+        error_clear_log: "Konnte Log nicht löschen",
+        confirm_clear_title: "Log wirklich leeren?",
+        confirm_clear_body: "Alle gespeicherten Einträge werden gelöscht und können nicht wiederhergestellt werden.",
+        confirm_clear_confirm: "Log löschen",
+        confirm_cancel: "Abbrechen",
+        action_on: "Ein",
+        action_off: "Aus",
+        action_online: "Online",
+        action_offline: "Offline",
+        add_device_hint: "Füge SmartLife oder andere Geräte hinzu."
+      },
+      en: {
+        hero_kicker: "WeepHub Control",
+        hero_title: "Smart home, but fancy.",
+        hero_subtitle: "Connect your SmartLife sockets, see status, and toggle with smooth animations. Ready for all your other devices.",
+        add_device_btn: "Add device",
+        drawer_title: "Add device",
+        drawer_subtitle: "Add SmartLife or other devices.",
+        field_name: "Name",
+        field_room: "Room",
+        field_type: "Type",
+        field_brand: "Brand",
+        placeholder_name: "e.g. Living room outlet",
+        placeholder_room: "Living room",
+        type_socket: "Outlet",
+        type_light: "Light",
+        type_sensor: "Sensor",
+        unknown_room: "Unknown",
+        unknown_device: "Unknown device",
+        error_missing_name: "Name is missing",
+        error_add: "Failed to add device",
+        btn_create: "Create",
+        btn_saving: "Saving...",
+        search_placeholder: "Search devices...",
+        online_only: "Online only",
+        status_online: "Online",
+        status_offline: "Offline",
+        toggle_on: "On",
+        toggle_off: "Off",
+        brand_default: "SmartThings",
+        loading_devices: "Loading SmartThings devices...",
+        error_load_devices: "Could not load devices",
+        error_toggle: "Toggle failed",
+        devices_empty: "No devices found.",
+        activity_title: "Recent activity",
+        activity_subtitle: "Switches & online status are logged live.",
+        activity_live: "Live",
+        activity_col_device: "Device",
+        activity_col_action: "Action",
+        activity_col_time: "Time",
+        activity_empty: "No actions yet.",
+        activity_clear: "Clear log",
+        activity_clearing: "Clearing...",
+        error_clear_log: "Could not clear log",
+        confirm_clear_title: "Clear log?",
+        confirm_clear_body: "All saved entries will be removed and cannot be restored.",
+        confirm_clear_confirm: "Delete log",
+        confirm_cancel: "Cancel",
+        action_on: "On",
+        action_off: "Off",
+        action_online: "Online",
+        action_offline: "Offline",
+        add_device_hint: "Add SmartLife or other devices."
+      }
+    };
+
+    const t = (lang, key) => translations[lang]?.[key] ?? translations.de[key] ?? key;
+
+    const formatRelativeTime = (timestamp, lang) => {
       const diffSec = Math.round((Date.now() - timestamp) / 1000);
-      if (diffSec < 5) return "gerade eben";
-      if (diffSec < 60) return `vor ${diffSec} s`;
-      const diffMin = Math.round(diffSec / 60);
-      if (diffMin < 60) return `vor ${diffMin} Min`;
-      const diffHours = Math.round(diffMin / 60);
-      if (diffHours < 24) return `vor ${diffHours} Std`;
-      const diffDays = Math.round(diffHours / 24);
-      return `vor ${diffDays} Tag${diffDays === 1 ? "" : "en"}`;
+      if (lang === "en") {
+        if (diffSec < 5) return "just now";
+        if (diffSec < 60) return `${diffSec}s ago`;
+        const diffMin = Math.round(diffSec / 60);
+        if (diffMin < 60) return `${diffMin} min ago`;
+        const diffHours = Math.round(diffMin / 60);
+        if (diffHours < 24) return `${diffHours} h ago`;
+        const diffDays = Math.round(diffHours / 24);
+        return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+      } else {
+        if (diffSec < 5) return "gerade eben";
+        if (diffSec < 60) return `vor ${diffSec} s`;
+        const diffMin = Math.round(diffSec / 60);
+        if (diffMin < 60) return `vor ${diffMin} Min`;
+        const diffHours = Math.round(diffMin / 60);
+        if (diffHours < 24) return `vor ${diffHours} Std`;
+        const diffDays = Math.round(diffHours / 24);
+        return `vor ${diffDays} Tag${diffDays === 1 ? "" : "en"}`;
+      }
     };
 
-    const ACTION_META = {
-      on: { label: "Ein", className: "text-success", icon: "bi-power" },
-      off: { label: "Aus", className: "text-danger", icon: "bi-power" },
-      online: { label: "Online", className: "text-success", icon: "bi-wifi" },
-      offline: { label: "Offline", className: "text-warning", icon: "bi-wifi-off" }
+    const getActionMeta = (action, lang) => {
+      const meta = {
+        on: { label: t(lang, "action_on"), className: "text-success", icon: "bi-power" },
+        off: { label: t(lang, "action_off"), className: "text-danger", icon: "bi-power" },
+        online: { label: t(lang, "action_online"), className: "text-success", icon: "bi-wifi" },
+        offline: { label: t(lang, "action_offline"), className: "text-warning", icon: "bi-wifi-off" }
+      };
+      return meta[action] || { label: action, className: "text-secondary", icon: "bi-dot" };
     };
 
-    const getActionMeta = (action) => ACTION_META[action] || { label: action, className: "text-secondary", icon: "bi-dot" };
-
-    const StatusPill = ({ online }) => (
+    const StatusPill = ({ online, t }) => (
       <span className="badge rounded-pill badge-soft d-inline-flex align-items-center gap-1">
         <span className="status-dot" style={{ color: online ? "#53f29c" : "#f25c5c" }}></span>
-        {online ? "Online" : "Offline"}
+        {online ? t("status_online") : t("status_offline")}
       </span>
     );
 
@@ -471,7 +616,7 @@
       return <i className="bi bi-hdd-network fs-5 text-info"></i>;
     };
 
-    const DeviceCard = ({ device, onToggle }) => {
+    const DeviceCard = ({ device, onToggle, t }) => {
       const prettyType = device.type;
       return (
         <div className="glass-card p-3 animate-pop">
@@ -485,17 +630,17 @@
                 <div className="device-id">{device.room || device.id}</div>
               </div>
             </div>
-            <StatusPill online={device.online} />
+            <StatusPill online={device.online} t={t} />
           </div>
 
           <div className="d-flex align-items-center justify-content-between mt-3">
             <div className="d-flex align-items-center gap-2 flex-wrap text-secondary">
               {prettyType && <span className="device-type-pill">{prettyType}</span>}
-              <span className="device-type-pill">{device.brand || "SmartThings"}</span>
+              <span className="device-type-pill">{device.brand || t("brand_default")}</span>
             </div>
             <button className="soft-toggle" onClick={() => onToggle(device)} disabled={!device.online}>
               <div className="status-dot" style={{ color: device.on ? "#7cf29c" : "#f2a15b" }}></div>
-              <span className="fw-semibold">{device.on ? "An" : "Aus"}</span>
+              <span className="fw-semibold">{device.on ? t("toggle_on") : t("toggle_off")}</span>
               <i className={`bi ${device.on ? "bi-toggle-on" : "bi-toggle-off"} fs-4`}></i>
             </button>
           </div>
@@ -503,7 +648,7 @@
       );
     };
 
-    const ConfirmModal = ({ open, title, body, confirmLabel = "Ja", cancelLabel = "Abbrechen", onConfirm, onCancel, loading }) => {
+    const ConfirmModal = ({ open, title, body, confirmLabel = "Ja", cancelLabel = "Abbrechen", loadingLabel, onConfirm, onCancel, loading }) => {
       if (!open) return null;
       return (
         <>
@@ -517,7 +662,7 @@
                   {cancelLabel}
                 </button>
                 <button className="btn btn-danger btn-sm" onClick={onConfirm} disabled={loading}>
-                  {loading ? "Leere..." : confirmLabel}
+                  {loading ? loadingLabel || confirmLabel : confirmLabel}
                 </button>
               </div>
             </div>
@@ -526,36 +671,76 @@
       );
     };
 
-    const AddDeviceDrawer = ({ onAdd }) => {
+    const LangToggle = ({ lang, setLang }) => (
+      <div className={`lang-toggle ${lang}`}>
+        <span className="pill" aria-hidden="true"></span>
+        <button className={lang === "de" ? "active" : ""} onClick={() => setLang("de")}>DE</button>
+        <button className={lang === "en" ? "active" : ""} onClick={() => setLang("en")}>EN</button>
+      </div>
+    );
+
+    const Hero = ({ t, onAddClick, lang, setLang }) => (
+      <div className="hero mb-4">
+        <div className="row align-items-center">
+          <div className="col-lg-8">
+            <p className="mb-2 text-uppercase text-light small fw-semibold" style={{ letterSpacing: "0.06em" }}>
+              {t("hero_kicker")}
+            </p>
+            <h1 className="display-5 fw-bold mb-3">{t("hero_title")}</h1>
+            <p className="lead mb-0" style={{ maxWidth: "700px", color: "var(--text-muted)" }}>
+              {t("hero_subtitle")}
+            </p>
+          </div>
+          <div className="col-lg-4 text-lg-end mt-3 mt-lg-0 d-flex flex-column align-items-lg-end align-items-start gap-2">
+            <LangToggle lang={lang} setLang={setLang} />
+            <button className="btn add-button px-4 py-2" onClick={onAddClick}>
+              <i className="bi bi-plus-lg me-2"></i>
+              {t("add_device_btn")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+
+    const AddDeviceDrawer = ({ onAdd, t }) => {
       const [name, setName] = useState("");
       const [room, setRoom] = useState("");
-      const [type, setType] = useState("Steckdose");
+      const [type, setType] = useState(t("type_socket"));
       const [brand, setBrand] = useState("SmartLife");
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState("");
 
+      useEffect(() => {
+        setType((prev) => {
+          if ([translations.de.type_socket, translations.en.type_socket].includes(prev)) return t("type_socket");
+          if ([translations.de.type_light, translations.en.type_light].includes(prev)) return t("type_light");
+          if ([translations.de.type_sensor, translations.en.type_sensor].includes(prev)) return t("type_sensor");
+          return prev;
+        });
+      }, [t]);
+
       const reset = () => {
         setName("");
         setRoom("");
-        setType("Steckdose");
+        setType(t("type_socket"));
         setBrand("SmartLife");
         setError("");
       };
 
       const handleAdd = async () => {
         if (!name.trim()) {
-          setError("Name fehlt");
+          setError(t("error_missing_name"));
           return;
         }
         setLoading(true);
         setError("");
         try {
-          await onAdd({ name: name.trim(), room: room.trim() || "Unbekannt", type, brand });
+          await onAdd({ name: name.trim(), room: room.trim() || t("unknown_room"), type, brand });
           reset();
           const drawer = bootstrap.Offcanvas.getInstance("#addDeviceDrawer");
           drawer?.hide();
         } catch (e) {
-          setError(e.message || "Fehler beim Hinzufügen");
+          setError(e.message || t("error_add"));
         } finally {
           setLoading(false);
         }
@@ -565,38 +750,38 @@
         <div className="offcanvas offcanvas-end" tabIndex="-1" id="addDeviceDrawer" aria-labelledby="addDeviceDrawerLabel" style={{ width: "380px" }}>
           <div className="offcanvas-header">
             <div>
-              <h5 className="offcanvas-title" id="addDeviceDrawerLabel">Gerät hinzufügen</h5>
-              <p className="mb-0 text-secondary small">Füge SmartLife oder andere Geräte hinzu.</p>
+              <h5 className="offcanvas-title" id="addDeviceDrawerLabel">{t("drawer_title")}</h5>
+              <p className="mb-0 text-secondary small">{t("drawer_subtitle")}</p>
             </div>
             <button type="button" className="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
           </div>
           <div className="offcanvas-body d-flex flex-column">
             <div className="mb-3">
-              <label className="form-label">Name</label>
-              <input className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder="z.B. Wohnzimmer Steckdose" />
+              <label className="form-label">{t("field_name")}</label>
+              <input className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("placeholder_name")} />
             </div>
             <div className="mb-3">
-              <label className="form-label">Raum</label>
-              <input className="form-control" value={room} onChange={(e) => setRoom(e.target.value)} placeholder="Wohnzimmer" />
+              <label className="form-label">{t("field_room")}</label>
+              <input className="form-control" value={room} onChange={(e) => setRoom(e.target.value)} placeholder={t("placeholder_room")} />
             </div>
             <div className="row">
               <div className="col-6 mb-3">
-                <label className="form-label">Typ</label>
+                <label className="form-label">{t("field_type")}</label>
                 <select className="form-select" value={type} onChange={(e) => setType(e.target.value)}>
-                  <option>Steckdose</option>
-                  <option>Licht</option>
-                  <option>Sensor</option>
+                  <option>{t("type_socket")}</option>
+                  <option>{t("type_light")}</option>
+                  <option>{t("type_sensor")}</option>
                 </select>
               </div>
               <div className="col-6 mb-3">
-                <label className="form-label">Brand</label>
+                <label className="form-label">{t("field_brand")}</label>
                 <input className="form-control" value={brand} onChange={(e) => setBrand(e.target.value)} />
               </div>
             </div>
             {error && <div className="alert alert-danger py-2">{error}</div>}
             <div className="mt-auto">
               <button className="btn add-button w-100" onClick={handleAdd} disabled={loading}>
-                {loading ? "Speichere..." : "Anlegen"}
+                {loading ? t("btn_saving") : t("btn_create")}
               </button>
             </div>
           </div>
@@ -604,7 +789,7 @@
       );
     };
 
-    const Filters = ({ search, setSearch, showOnlineOnly, setShowOnlineOnly }) => (
+    const Filters = ({ search, setSearch, showOnlineOnly, setShowOnlineOnly, t }) => (
       <div className="glass-card p-3 mb-3">
         <div className="row g-3 align-items-center">
           <div className="col-lg-8">
@@ -614,7 +799,7 @@
               </span>
               <input
                 className="form-control border-0 bg-transparent text-light"
-                placeholder="Geräte suchen..."
+                placeholder={t("search_placeholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -629,7 +814,7 @@
                 checked={showOnlineOnly}
                 onChange={(e) => setShowOnlineOnly(e.target.checked)}
               />
-              <label className="form-check-label text-secondary" htmlFor="onlineOnly">Nur Online</label>
+              <label className="form-check-label text-secondary" htmlFor="onlineOnly">{t("online_only")}</label>
             </div>
           </div>
         </div>
@@ -637,6 +822,14 @@
     );
 
     const App = () => {
+      const getInitialLang = () => {
+        const match = document.cookie.match(/lang=([a-z]{2})/i);
+        const langVal = match?.[1];
+        return langVal && ["de", "en"].includes(langVal.toLowerCase()) ? langVal.toLowerCase() : "en";
+      };
+
+      const [lang, setLang] = useState(getInitialLang);
+      const translate = useCallback((key) => t(lang, key), [lang]);
       const [devices, setDevices] = useState([]);
       const [loading, setLoading] = useState(true);
       const [error, setError] = useState("");
@@ -676,12 +869,12 @@
           if (!res.ok) throw new Error("Konnte Log nicht löschen");
           setActivity([]);
         } catch (e) {
-          setError(e.message || "Konnte Log nicht löschen");
+          setError(e.message || translate("error_clear_log"));
         } finally {
           setClearing(false);
           setShowConfirm(false);
         }
-      }, [clearing]);
+      }, [clearing, translate]);
 
       const addLogEntry = useCallback(
         (entry, { persist = false } = {}) => {
@@ -705,7 +898,7 @@
           const logs = await res.json();
           const mapped = (logs || []).map((log, idx) => ({
             id: `${log.timestamp || idx}-${idx}`,
-            device: log.device || "Unbekannt",
+            device: log.device || "",
             action: log.action || "unknown",
             timestamp: log.timestamp || Date.now()
           }));
@@ -713,6 +906,11 @@
         } catch (_) {
           // ignore, UI kann weiterarbeiten
         }
+      }, []);
+
+      const openAddDrawer = useCallback(() => {
+        const drawer = bootstrap.Offcanvas.getOrCreateInstance("#addDeviceDrawer");
+        drawer?.show();
       }, []);
 
       const detectOnlineChanges = useCallback(
@@ -766,6 +964,10 @@
       }, [loadDevices, loadLogs]);
 
       useEffect(() => {
+        document.cookie = `lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+      }, [lang]);
+
+      useEffect(() => {
         const interval = setInterval(() => {
           loadDevices({ withDiff: true, silent: true });
         }, 20000);
@@ -799,7 +1001,7 @@
             { persist: true }
           );
         } catch (e) {
-          setError(e.message || "Schalten fehlgeschlagen");
+          setError(e.message || translate("error_toggle"));
           setDevices((prev) => prev.map((d) => (d.id === device.id ? { ...d, on: device.on } : d)));
         }
       };
@@ -811,7 +1013,14 @@
 
       return (
         <div className="mb-5">
-          <Filters search={search} setSearch={setSearch} showOnlineOnly={showOnlineOnly} setShowOnlineOnly={setShowOnlineOnly} />
+          <Hero t={translate} onAddClick={openAddDrawer} lang={lang} setLang={setLang} />
+          <Filters
+            search={search}
+            setSearch={setSearch}
+            showOnlineOnly={showOnlineOnly}
+            setShowOnlineOnly={setShowOnlineOnly}
+            t={translate}
+          />
 
           {error && (
             <div className="alert alert-danger d-flex align-items-center gap-2 glass-card border-0">
@@ -821,15 +1030,15 @@
           )}
 
           {loading ? (
-            <div className="text-center py-5 text-secondary">Lade SmartThings Geräte...</div>
+            <div className="text-center py-5 text-secondary">{translate("loading_devices")}</div>
           ) : (
             <>
               <div className="grid">
                 {filtered.map((device) => (
-                  <DeviceCard key={device.id} device={device} onToggle={handleToggle} />
+                  <DeviceCard key={device.id} device={device} onToggle={handleToggle} t={translate} />
                 ))}
               </div>
-              {filtered.length === 0 && <div className="text-center text-secondary py-4">Keine Geräte gefunden.</div>}
+              {filtered.length === 0 && <div className="text-center text-secondary py-4">{translate("devices_empty")}</div>}
             </>
           )}
 
@@ -838,42 +1047,42 @@
           <div className="glass-card p-3 activity-card">
             <div className="d-flex align-items-center justify-content-between mb-3">
               <div>
-                <div className="fw-semibold">Letzte Aktionen</div>
-                <div className="text-secondary small">Schalten & Online-Status werden live geloggt.</div>
+                <div className="fw-semibold">{translate("activity_title")}</div>
+                <div className="text-secondary small">{translate("activity_subtitle")}</div>
               </div>
               <div className="d-flex align-items-center gap-2">
                 <button className="ghost-button btn btn-sm" onClick={() => setShowConfirm(true)} disabled={clearing}>
                   <i className="bi bi-trash3"></i>
-                  {clearing ? "Leere..." : "Log leeren"}
+                  {clearing ? translate("activity_clearing") : translate("activity_clear")}
                 </button>
-                <span className="badge-soft badge rounded-pill">Live</span>
+                <span className="badge-soft badge rounded-pill">{translate("activity_live")}</span>
               </div>
             </div>
             <div className="table-responsive rounded-4">
               <table className="table table-dark table-sm align-middle mb-0 activity-table">
                 <thead>
                   <tr>
-                    <th>Gerät</th>
-                    <th>Aktion</th>
-                    <th>Zeit</th>
+                    <th>{translate("activity_col_device")}</th>
+                    <th>{translate("activity_col_action")}</th>
+                    <th>{translate("activity_col_time")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {activity.length === 0 ? (
                     <tr>
-                      <td colSpan="3" className="text-center text-secondary">Noch keine Aktionen.</td>
+                      <td colSpan="3" className="text-center text-secondary">{translate("activity_empty")}</td>
                     </tr>
                   ) : (
                     activity.map((log) => {
-                      const meta = getActionMeta(log.action);
+                      const meta = getActionMeta(log.action, lang);
                       return (
                         <tr key={log.id}>
-                          <td>{log.device}</td>
+                          <td>{log.device || translate("unknown_device")}</td>
                           <td className={meta.className}>
                             <i className={`bi ${meta.icon} me-1`}></i>
                             {meta.label}
                           </td>
-                          <td>{formatRelativeTime(log.timestamp)}</td>
+                          <td>{formatRelativeTime(log.timestamp, lang)}</td>
                         </tr>
                       );
                     })
@@ -883,13 +1092,14 @@
             </div>
           </div>
 
-          <AddDeviceDrawer onAdd={handleAdd} />
+          <AddDeviceDrawer onAdd={handleAdd} t={translate} />
           <ConfirmModal
             open={showConfirm}
-            title="Log wirklich leeren?"
-            body="Alle gespeicherten Einträge werden gelöscht und können nicht wiederhergestellt werden."
-            confirmLabel="Log löschen"
-            cancelLabel="Abbrechen"
+            title={translate("confirm_clear_title")}
+            body={translate("confirm_clear_body")}
+            confirmLabel={translate("confirm_clear_confirm")}
+            cancelLabel={translate("confirm_cancel")}
+            loadingLabel={translate("activity_clearing")}
             onConfirm={performClear}
             onCancel={() => setShowConfirm(false)}
             loading={clearing}
