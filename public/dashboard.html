@@ -252,6 +252,47 @@
       opacity: 0.35;
     }
 
+    /* Debug console overlay */
+    .debug-console {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: 340px;
+      max-height: 240px;
+      background: rgba(10, 12, 16, 0.94);
+      border: 1px solid rgba(124, 231, 255, 0.2);
+      border-radius: 12px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+      color: #e6ecf5;
+      z-index: 1200;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+    .debug-console header {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .debug-console pre {
+      flex: 1;
+      margin: 0;
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.35;
+      font-family: "Fira Code", monospace;
+      overflow-y: auto;
+      background: transparent;
+    }
+    .debug-badge {
+      color: #9be8ff;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
     .animate-pop {
       animation: pop 260ms ease;
     }
@@ -652,6 +693,7 @@
         auth_missing: "Bitte fülle alle Felder aus",
         hero_welcome: "Willkommen zurück,",
         api_management: "API Management",
+        settings: "Einstellungen",
         action_on: "Ein",
         action_off: "Aus",
         action_online: "Online",
@@ -719,6 +761,7 @@
         auth_missing: "Please fill in all fields",
         hero_welcome: "Welcome back,",
         api_management: "API Management",
+        settings: "Settings",
         action_on: "On",
         action_off: "Off",
         action_online: "Online",
@@ -892,6 +935,10 @@
             <a className="dropdown-item-ghost" href="/api-management">
               <i className="bi bi-gear"></i>
               {t("api_management")}
+            </a>
+            <a className="dropdown-item-ghost" href="/settings">
+              <i className="bi bi-sliders"></i>
+              {t("settings")}
             </a>
             <button className="dropdown-item-ghost" onClick={onLogout}>
               <i className="bi bi-box-arrow-right"></i>
@@ -1070,6 +1117,7 @@
       const activityRef = useRef([]);
       const [clearing, setClearing] = useState(false);
       const [showConfirm, setShowConfirm] = useState(false);
+      const [debugConsole, setDebugConsole] = useState({ enabled: false, entries: [] });
 
       useEffect(() => {
         devicesRef.current = devices;
@@ -1082,6 +1130,18 @@
       useEffect(() => {
         document.cookie = `lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
       }, [lang]);
+
+      useEffect(() => {
+        try {
+          const stored = localStorage.getItem("settings");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed.debug?.consoleOverlay) {
+              setDebugConsole((prev) => ({ ...prev, enabled: true }));
+            }
+          }
+        } catch (_) {}
+      }, []);
 
       const loadAuth = useCallback(async () => {
         try {
@@ -1265,6 +1325,41 @@
         setDevices((prev) => [...prev, created]);
       };
 
+      // Debug console hooks
+      useEffect(() => {
+        if (!debugConsole.enabled) return;
+
+        const pushEntry = (type, message) => {
+          setDebugConsole((prev) => {
+            const entry = {
+              id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+              type,
+              message: typeof message === "string" ? message : JSON.stringify(message),
+              ts: new Date().toLocaleTimeString()
+            };
+            return { ...prev, entries: [entry, ...(prev.entries || [])].slice(0, 50) };
+          });
+        };
+
+        const originalError = console.error;
+        console.error = (...args) => {
+          pushEntry("error", args.join(" "));
+          originalError.apply(console, args);
+        };
+
+        const onError = (e) => pushEntry("error", e.message || "Error");
+        const onRejection = (e) => pushEntry("error", e.reason || "Rejection");
+
+        window.addEventListener("error", onError);
+        window.addEventListener("unhandledrejection", onRejection);
+
+        return () => {
+          console.error = originalError;
+          window.removeEventListener("error", onError);
+          window.removeEventListener("unhandledrejection", onRejection);
+        };
+      }, [debugConsole.enabled]);
+
       return (
         <div className="mb-5">
           <Hero
@@ -1365,6 +1460,17 @@
             onCancel={() => setShowConfirm(false)}
             loading={clearing}
           />
+          {debugConsole.enabled && (
+            <div className="debug-console">
+              <header>
+                <span className="debug-badge">Debug Console</span>
+                <small className="text-secondary">Live</small>
+              </header>
+              <pre>
+                {debugConsole.entries.map((e) => `[${e.ts}] ${e.type.toUpperCase()}: ${e.message}`).join("\n")}
+              </pre>
+            </div>
+          )}
         </div>
       );
     };

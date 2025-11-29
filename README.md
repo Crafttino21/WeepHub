@@ -51,7 +51,8 @@ WeepHub/
 ├─ public/
 │  ├─ index.html        # Login/Signup (React, i18n)
 │  ├─ dashboard.html    # Dashboard (devices, logs, i18n)
-│  └─ api.html          # API Management (integrations, tokens, i18n)
+│  ├─ api.html          # API Management (integrations, tokens, i18n)
+│  └─ settings.html     # Settings (UI prefs, language, polling)
 ├─ data/                # Local auth/tokens (ignored by git)
 │  ├─ user.json         # Local user (hashed)
 │  ├─ secret.key        # Local AES key for integrations

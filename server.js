@@ -33,7 +33,7 @@ async function ensureLogFile() {
       await fsPromises.writeFile(LOG_FILE, "", "utf8");
     }
   } catch (err) {
-    console.error("❌ Konnte Logdatei nicht anlegen:", err);
+    console.error("❌ Failed to create log file:", err);
   }
 }
 
@@ -51,7 +51,7 @@ async function ensureUserFile() {
       await fsPromises.writeFile(KEY_FILE, key.toString("hex"), "utf8");
     }
   } catch (err) {
-    console.error("❌ Konnte Userdatei nicht anlegen:", err);
+    console.error("❌ Failed to create user file:", err);
   }
 }
 
@@ -151,7 +151,7 @@ async function appendLog(entry) {
   try {
     await fsPromises.appendFile(LOG_FILE, line + "\n", "utf8");
   } catch (err) {
-    console.error("❌ Schreiben ins Log fehlgeschlagen:", err);
+    console.error("❌ Failed to write to log:", err);
   }
 }
 
@@ -170,7 +170,7 @@ async function readLogs(limit = 100) {
       .filter(Boolean);
     return parsed.slice(-limit).reverse(); // neueste zuerst
   } catch (err) {
-    console.error("❌ Lesen des Logs fehlgeschlagen:", err);
+    console.error("❌ Failed to read log:", err);
     return [];
   }
 }
@@ -310,7 +310,7 @@ function mapSmartThingsDevice(device, liveStatus) {
 }
 
 // ----------------------------
-// ✅ ALLE GERÄTE LADEN
+// ✅ LOAD ALL DEVICES
 // ----------------------------
 app.get("/api/smartlife/devices", async (_req, res) => {
   try {
@@ -339,13 +339,13 @@ app.get("/api/smartlife/devices", async (_req, res) => {
 
     res.json(mappedAll);
   } catch (err) {
-    console.error("❌ GERÄTE FEHLER:", err);
+    console.error("❌ DEVICE LIST ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 // ----------------------------
-// ✅ GERÄT SCHALTEN (TOGGLE)
+// ✅ DEVICE TOGGLE
 // ----------------------------
 app.post("/api/smartlife/devices/:id/state", async (req, res) => {
   const { id } = req.params;
@@ -388,7 +388,7 @@ app.post("/api/smartlife/devices/:id/state", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ SCHALT FEHLER:", err);
+    console.error("❌ TOGGLE ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -422,8 +422,8 @@ app.delete("/api/logs", async (_req, res) => {
     await fsPromises.writeFile(LOG_FILE, "", "utf8");
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ Log löschen fehlgeschlagen:", err);
-    res.status(500).json({ error: "Konnte Log nicht löschen" });
+    console.error("❌ Failed to clear log:", err);
+    res.status(500).json({ error: "Could not clear log" });
   }
 });
 
@@ -548,6 +548,39 @@ app.post("/api/user/logout", (req, res) => {
     .json({ success: true });
 });
 
+app.post("/api/user/update", async (req, res) => {
+  const auth = await requireAuth(req, res);
+  if (!auth) return;
+
+  const { username, password } = req.body || {};
+  if (!username && !password) {
+    return res.status(400).json({ error: "Nichts zu ändern" });
+  }
+
+  const user = await readUser();
+  if (!user) return res.status(400).json({ error: "Kein User angelegt" });
+
+  const updated = { ...user };
+  if (username && String(username).trim()) {
+    updated.username = String(username).trim();
+  }
+  if (password && String(password).length >= 6) {
+    const { salt, hash } = hashPassword(String(password));
+    updated.salt = salt;
+    updated.hash = hash;
+  }
+
+  await writeUser(updated);
+  const token = makeSessionToken(updated);
+  res
+    .cookie("sid", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: SESSION_MAX_AGE_MS
+    })
+    .json({ success: true, username: updated.username });
+});
+
 // ----------------------------
 // ✅ FRONTEND
 // ----------------------------
@@ -564,6 +597,11 @@ app.get("/api-management", (_req, res) => {
   res.sendFile(path.join(publicDir, "api.html"));
 });
 
+// Serve settings
+app.get("/settings", (_req, res) => {
+  res.sendFile(path.join(publicDir, "settings.html"));
+});
+
 // Default to login page for other routes
 app.get("*", (_req, res) => {
   res.sendFile(path.join(publicDir, "index.html"));
@@ -571,5 +609,5 @@ app.get("*", (_req, res) => {
 
 // ----------------------------
 app.listen(PORT, () => {
-  console.log(`✅ WeepHub läuft auf http://localhost:${PORT}`);
+console.log(`✅ WeepHub running at http://localhost:${PORT}`);
 });

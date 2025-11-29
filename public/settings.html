@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeepHub Settings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.16);
+      --accent: #7ce7ff;
+      --accent-2: #8b5cf6;
+      --text-muted: #b6c2d9;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 20% 20%, rgba(124, 231, 255, 0.12), transparent 25%),
+        radial-gradient(circle at 80% 0%, rgba(139, 92, 246, 0.25), transparent 30%),
+        radial-gradient(circle at 60% 70%, rgba(124, 231, 255, 0.18), transparent 25%),
+        var(--bg);
+      color: #e6ecf5;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 16px;
+    }
+    .card-soft {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 20px;
+      width: 100%;
+      max-width: 960px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    }
+    .section-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    .glow-btn {
+      background: linear-gradient(135deg, #7ce7ff, #8b5cf6);
+      border: none;
+      color: #041727;
+      font-weight: 600;
+      box-shadow: 0 12px 35px rgba(124, 231, 255, 0.35);
+      width: 100%;
+      border-radius: 10px;
+      transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+    .glow-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 45px rgba(139, 92, 246, 0.45);
+    }
+    .glow-btn:active {
+      transform: translateY(0);
+    }
+    .form-label {
+      font-weight: 600;
+      color: #dfe6f4;
+    }
+    .form-control,
+    .form-select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(124, 231, 255, 0.25);
+      border-radius: 12px;
+      color: #f4f7ff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease;
+    }
+    .form-select option {
+      background: #0c1018;
+      color: #e6ecf5;
+    }
+    .form-control:focus,
+    .form-select:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(124, 231, 255, 0.9);
+      box-shadow: 0 0 0 0.15rem rgba(124, 231, 255, 0.25);
+      color: #fff;
+    }
+    .form-control::placeholder {
+      color: rgba(230, 236, 245, 0.65);
+    }
+    /* Custom select styling */
+    .select-shell {
+      position: relative;
+    }
+    .select-trigger {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(124, 231, 255, 0.25);
+      background: rgba(255, 255, 255, 0.06);
+      color: #f4f7ff;
+      padding: 10px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+    .select-trigger:hover {
+      border-color: rgba(124, 231, 255, 0.5);
+    }
+    .select-trigger.open {
+      border-color: rgba(124, 231, 255, 0.9);
+      box-shadow: 0 0 0 0.15rem rgba(124, 231, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .select-menu {
+      position: absolute;
+      width: 100%;
+      margin-top: 6px;
+      background: rgba(12, 16, 24, 0.95);
+      border: 1px solid rgba(124, 231, 255, 0.25);
+      border-radius: 12px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(6px);
+      z-index: 20;
+      overflow: hidden;
+    }
+    .select-option {
+      padding: 10px 12px;
+      color: #e6ecf5;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: background 120ms ease;
+    }
+    .select-option:hover,
+    .select-option.active {
+      background: rgba(124, 231, 255, 0.1);
+    }
+    .select-label {
+      font-weight: 600;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .link-btn {
+      color: #dce4f5;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .toggle-row:last-child {
+      border-bottom: none;
+    }
+    .muted {
+      color: var(--text-muted);
+    }
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+      margin: 6px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel">
+    const { useEffect, useState, useCallback } = React;
+
+    const translations = {
+      en: {
+        title: "Settings",
+        subtitle: "Tweak your WeepHub experience",
+        back: "Back",
+        ui_prefs: "Interface",
+        lang: "Language",
+        theme: "Theme",
+        theme_default: "Default",
+        polling: "Device polling (sec)",
+        online_only: "Online filter default",
+        save: "Save",
+        saving: "Saving...",
+        saved: "Saved.",
+        auth_required: "Auth required",
+        de: "German",
+        en: "English",
+        advanced: "Advanced",
+        debug_env: "Prefer .env token",
+        debug_verbose: "Verbose logs",
+        debug_console: "In-app console",
+        console_hint: "Show client errors in an overlay",
+        account: "Account",
+        username: "Username",
+        password: "Password",
+        account_hint: "Leave empty to keep current",
+        account_save: "Update account",
+        account_saved: "Account updated"
+      },
+      de: {
+        title: "Einstellungen",
+        subtitle: "Passe dein WeepHub-Erlebnis an",
+        back: "Zurück",
+        ui_prefs: "Interface",
+        lang: "Sprache",
+        theme: "Theme",
+        theme_default: "Standard",
+        polling: "Polling-Intervall (Sek.)",
+        online_only: "Online-Filter standardmäßig",
+        save: "Speichern",
+        saving: "Speichere...",
+        saved: "Gespeichert.",
+        auth_required: "Anmeldung erforderlich",
+        de: "Deutsch",
+        en: "Englisch",
+        advanced: "Advanced",
+        debug_env: ".env Token bevorzugen",
+        debug_verbose: "Verbose Logs",
+        debug_console: "In-App Konsole",
+        console_hint: "Zeigt Client-Fehler als Overlay",
+        account: "Account",
+        username: "Benutzername",
+        password: "Passwort",
+        account_hint: "Leer lassen, um unverändert zu lassen",
+        account_save: "Zugangsdaten aktualisieren",
+        account_saved: "Konto aktualisiert"
+      }
+    };
+
+    const t = (lang, key) => translations[lang]?.[key] ?? translations.en[key] ?? key;
+
+    const Select = ({ value, onChange, options }) => {
+      const [open, setOpen] = useState(false);
+      useEffect(() => {
+        const handler = (e) => {
+          if (!e.target.closest(".select-shell")) setOpen(false);
+        };
+        document.addEventListener("click", handler);
+        return () => document.removeEventListener("click", handler);
+      }, []);
+      const current = options.find((o) => o.value === value) || options[0];
+      return (
+        <div className="select-shell position-relative">
+          <button type="button" className={`select-trigger ${open ? "open" : ""}`} onClick={() => setOpen((p) => !p)}>
+            <span className="select-label">{current.label}</span>
+            <i className="bi bi-chevron-down"></i>
+          </button>
+          {open && (
+            <div className="select-menu">
+              {options.map((opt) => (
+                <div
+                  key={opt.value}
+                  className={`select-option ${opt.value === value ? "active" : ""}`}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setOpen(false);
+                  }}
+                >
+                  <span>{opt.label}</span>
+                  {opt.value === value && <i className="bi bi-check2"></i>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const App = () => {
+      const getInitialLang = () => {
+        const match = document.cookie.match(/lang=([a-z]{2})/i);
+        const langVal = match?.[1];
+        return langVal && ["de", "en"].includes(langVal.toLowerCase()) ? langVal.toLowerCase() : "en";
+      };
+      const [lang, setLang] = useState(getInitialLang);
+      const [onlineOnly, setOnlineOnly] = useState(false);
+      const [polling, setPolling] = useState(20);
+      const [saving, setSaving] = useState(false);
+      const [msg, setMsg] = useState("");
+      const [debug, setDebug] = useState({
+        useEnvToken: false,
+        verboseLog: false,
+        consoleOverlay: false
+      });
+      const [accountName, setAccountName] = useState("");
+      const [accountPass, setAccountPass] = useState("");
+      const [accountMsg, setAccountMsg] = useState("");
+
+      const ensureAuth = useCallback(async () => {
+        const res = await fetch("/api/user/status", { credentials: "include" });
+        if (!res.ok) {
+          window.location.href = "/";
+          return false;
+        }
+        const data = await res.json();
+        if (!data.authenticated) {
+          window.location.href = "/";
+          return false;
+        }
+        if (data.username) setAccountName(data.username);
+        return true;
+      }, []);
+
+      useEffect(() => {
+        ensureAuth();
+      }, [ensureAuth]);
+
+      useEffect(() => {
+        const stored = localStorage.getItem("settings");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (typeof parsed.onlineOnly === "boolean") setOnlineOnly(parsed.onlineOnly);
+            if (Number.isFinite(parsed.polling)) setPolling(parsed.polling);
+            if (parsed.lang && ["de", "en"].includes(parsed.lang)) setLang(parsed.lang);
+            if (parsed.debug) {
+              setDebug({
+                useEnvToken: Boolean(parsed.debug.useEnvToken),
+                verboseLog: Boolean(parsed.debug.verboseLog),
+                consoleOverlay: Boolean(parsed.debug.consoleOverlay)
+              });
+            }
+          } catch (_) {}
+        }
+      }, []);
+
+      useEffect(() => {
+        document.cookie = `lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+      }, [lang]);
+
+      const handleSave = () => {
+        setSaving(true);
+        setMsg("");
+        const next = { onlineOnly, polling: Number(polling) || 20, lang, debug };
+        localStorage.setItem("settings", JSON.stringify(next));
+        setTimeout(() => {
+          setSaving(false);
+          setMsg(t(lang, "saved"));
+        }, 300);
+      };
+
+      const handleAccountSave = async () => {
+        setAccountMsg("");
+        if (!accountName.trim() && !accountPass.trim()) {
+          setAccountMsg(t(lang, "account_hint"));
+          return;
+        }
+        try {
+          const res = await fetch("/api/user/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              username: accountName.trim() || undefined,
+              password: accountPass.trim() || undefined
+            })
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Update failed");
+          const data = await res.json();
+          if (data.username) setAccountName(data.username);
+          setAccountPass("");
+          setAccountMsg(t(lang, "account_saved"));
+        } catch (e) {
+          setAccountMsg(e.message || "Update failed");
+        }
+      };
+
+      const handleBack = () => {
+        window.location.href = "/dashboard";
+      };
+
+      return (
+        <div className="card-soft">
+          <div className="top-row mb-2">
+            <div>
+              <div className="fs-5 fw-bold">{t(lang, "title")}</div>
+              <div className="text-secondary small">{t(lang, "subtitle")}</div>
+            </div>
+            <a className="link-btn" href="#" onClick={(e) => { e.preventDefault(); handleBack(); }}>
+              <i className="bi bi-arrow-left"></i> {t(lang, "back")}
+            </a>
+          </div>
+
+          <div className="section-card mb-3">
+            <div className="fw-semibold mb-2">{t(lang, "ui_prefs")}</div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "lang")}</div>
+                <div className="muted small">Dashboard language</div>
+              </div>
+              <div style={{ width: "200px" }}>
+                <Select
+                  value={lang}
+                  onChange={(v) => setLang(v)}
+                  options={[
+                    { value: "en", label: t(lang, "en") },
+                    { value: "de", label: t(lang, "de") }
+                  ]}
+                />
+              </div>
+            </div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "online_only")}</div>
+                <div className="muted small">Filter online devices by default</div>
+              </div>
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={onlineOnly}
+                  onChange={(e) => setOnlineOnly(e.target.checked)}
+                />
+              </div>
+            </div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "polling")}</div>
+                <div className="muted small">Background refresh interval</div>
+              </div>
+              <input
+                type="number"
+                className="form-control"
+                style={{ width: "140px" }}
+                value={polling}
+                min="5"
+                max="300"
+                onChange={(e) => setPolling(parseInt(e.target.value, 10) || 20)}
+              />
+            </div>
+            <div className="divider"></div>
+            <div className="fw-semibold mt-1">{t(lang, "advanced")}</div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "debug_env")}</div>
+                <div className="muted small">Prefer .env SmartThings token (if set)</div>
+              </div>
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={debug.useEnvToken}
+                  onChange={(e) => setDebug((d) => ({ ...d, useEnvToken: e.target.checked }))}
+                />
+              </div>
+            </div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "debug_verbose")}</div>
+                <div className="muted small">More console logging (client)</div>
+              </div>
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={debug.verboseLog}
+                  onChange={(e) => setDebug((d) => ({ ...d, verboseLog: e.target.checked }))}
+                />
+              </div>
+            </div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "debug_console")}</div>
+                <div className="muted small">{t(lang, "console_hint")}</div>
+              </div>
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={debug.consoleOverlay}
+                  onChange={(e) => setDebug((d) => ({ ...d, consoleOverlay: e.target.checked }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="section-card mb-3">
+            <div className="fw-semibold mb-2">{t(lang, "account")}</div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "username")}</div>
+                <div className="muted small">{t(lang, "account_hint")}</div>
+              </div>
+              <input
+                className="form-control"
+                style={{ width: "220px" }}
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+              />
+            </div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "password")}</div>
+                <div className="muted small">{t(lang, "account_hint")}</div>
+              </div>
+              <input
+                className="form-control"
+                style={{ width: "220px" }}
+                type="password"
+                value={accountPass}
+                onChange={(e) => setAccountPass(e.target.value)}
+                placeholder="******"
+              />
+            </div>
+            <button className="btn glow-btn" onClick={handleAccountSave}>
+              {t(lang, "account_save") || t(lang, "save")}
+            </button>
+            {accountMsg && <div className="text-info small mt-1">{accountMsg}</div>}
+          </div>
+
+          <button className="btn glow-btn" onClick={handleSave} disabled={saving}>
+            {saving ? t(lang, "saving") : t(lang, "save")}
+          </button>
+          {msg && <div className="mt-2 text-info small">{msg}</div>}
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
