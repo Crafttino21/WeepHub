@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeepHub Smart Home</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+  />
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.16);
+      --accent: #7ce7ff;
+      --accent-2: #8b5cf6;
+      --glow: 0 10px 45px rgba(124, 231, 255, 0.35);
+      --text-muted: #b6c2d9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 20%, rgba(124, 231, 255, 0.12), transparent 25%),
+        radial-gradient(circle at 80% 0%, rgba(139, 92, 246, 0.25), transparent 30%),
+        radial-gradient(circle at 60% 70%, rgba(124, 231, 255, 0.18), transparent 25%),
+        var(--bg);
+      color: #e6ecf5;
+      overflow-x: hidden;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .glass-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(120% 120% at 20% 20%, rgba(124, 231, 255, 0.08), transparent 55%);
+      opacity: 0;
+      transition: opacity 180ms ease;
+      pointer-events: none;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(124, 231, 255, 0.45);
+      box-shadow: var(--glow);
+    }
+
+    .glass-card:hover::after {
+      opacity: 1;
+    }
+
+    .soft-toggle {
+      background: linear-gradient(120deg, rgba(124, 231, 255, 0.25), rgba(139, 92, 246, 0.25));
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      color: #e6ecf5;
+      transition: background 160ms ease, transform 160ms ease, border-color 160ms ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .soft-toggle:hover {
+      transform: translateY(-2px);
+      border-color: rgba(124, 231, 255, 0.5);
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .floating-shape {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle, rgba(124, 231, 255, 0.25), transparent 70%);
+      filter: blur(35px);
+      animation: float 14s ease-in-out infinite alternate;
+      opacity: 0.65;
+    }
+
+    .floating-shape.s2 {
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.28), transparent 65%);
+      animation-duration: 16s;
+    }
+
+    @keyframes float {
+      from {
+        transform: translate3d(0, -12px, 0);
+      }
+      to {
+        transform: translate3d(0, 18px, 0);
+      }
+    }
+
+    .badge-soft {
+      background: rgba(124, 231, 255, 0.18);
+      color: #d6f6ff;
+      border: 1px solid rgba(124, 231, 255, 0.35);
+    }
+
+    .hero {
+      position: relative;
+      padding: 36px 24px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: linear-gradient(120deg, rgba(124, 231, 255, 0.12), rgba(139, 92, 246, 0.08), rgba(124, 231, 255, 0.1));
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.14), transparent 30%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .hero h1 {
+      letter-spacing: -0.02em;
+    }
+
+    .blurred-divider {
+      height: 1px;
+      margin: 24px 0;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.35), transparent);
+      opacity: 0.35;
+    }
+
+    .animate-pop {
+      animation: pop 260ms ease;
+    }
+
+    @keyframes pop {
+      from {
+        transform: scale(0.95) translateY(6px);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .device-type-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    .add-button {
+      background: linear-gradient(135deg, #7ce7ff, #8b5cf6);
+      border: none;
+      color: #041727;
+      font-weight: 600;
+      box-shadow: 0 12px 35px rgba(124, 231, 255, 0.35);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .add-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 45px rgba(139, 92, 246, 0.45);
+    }
+
+    .offcanvas {
+      background: var(--bg);
+      color: #e6ecf5;
+    }
+
+    .offcanvas-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .form-control,
+    .form-select {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #e6ecf5;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: rgba(124, 231, 255, 0.65);
+      box-shadow: 0 0 0 0.15rem rgba(124, 231, 255, 0.25);
+    }
+
+    .table-dark th,
+    .table-dark td {
+      color: #dce4f5;
+    }
+  </style>
+</head>
+<body>
+  <div class="floating-shape" style="top: -60px; left: -40px;"></div>
+  <div class="floating-shape s2" style="bottom: -120px; right: -60px;"></div>
+
+  <div class="container py-4">
+    <div class="hero mb-4">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <p class="mb-2 text-uppercase text-light small fw-semibold" style="letter-spacing: 0.06em;">
+            WeepHub Control
+          </p>
+          <h1 class="display-5 fw-bold mb-3">Smart Home, aber fancy.</h1>
+          <p class="lead mb-0" style="max-width: 700px; color: var(--text-muted);">
+            Verbinde deine SmartLife Steckdosen, sieh Status und schalte sie mit sanften Animationen. Bereit für alle weiteren Geräte.
+          </p>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+          <button class="btn add-button px-4 py-2" data-bs-toggle="offcanvas" data-bs-target="#addDeviceDrawer">
+            <i class="bi bi-plus-lg me-2"></i>Gerät hinzufügen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="root"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useEffect, useMemo, useState } = React;
+
+    // SmartLife-aware client using local Express endpoints. Swap fetch URLs for your proxy if needed.
+    const smartLifeClient = (() => {
+      return {
+        async listDevices() {
+          const res = await fetch("/api/smartlife/devices");
+          if (!res.ok) throw new Error("Geräte laden fehlgeschlagen");
+          return res.json();
+        },
+        async setDeviceState(id, on) {
+          const res = await fetch(`/api/smartlife/devices/${id}/state`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ on })
+          });
+          if (!res.ok) throw new Error("Schalten fehlgeschlagen");
+          return res.json();
+        },
+        async addDevice(payload) {
+          const res = await fetch(`/api/smartlife/devices`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error("Gerät anlegen fehlgeschlagen");
+          return res.json();
+        }
+      };
+    })();
+
+    const StatusPill = ({ online }) => (
+      <span className="badge rounded-pill badge-soft d-inline-flex align-items-center gap-1">
+        <span className="status-dot" style={{ color: online ? "#53f29c" : "#f25c5c" }}></span>
+        {online ? "Online" : "Offline"}
+      </span>
+    );
+
+    const DeviceCard = ({ device, onToggle }) => {
+      const icon = device.type === "Steckdose" ? "bi-outlet" : "bi-hdd-network";
+      return (
+        <div className="glass-card p-3 animate-pop">
+          <div className="d-flex align-items-start justify-content-between mb-2">
+            <div className="d-flex align-items-center gap-2">
+              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 42, height: 42, background: "rgba(255,255,255,0.06)" }}>
+                <i className={`bi ${icon} fs-5 text-info`}></i>
+              </div>
+              <div>
+                <div className="fw-semibold">{device.name}</div>
+                <div className="small text-secondary">{device.room || "Unbekannter Raum"}</div>
+              </div>
+            </div>
+            <StatusPill online={device.online} />
+          </div>
+
+          <div className="d-flex align-items-center justify-content-between mt-3">
+            <div className="d-flex align-items-center gap-2 text-secondary">
+              <span className="device-type-pill">{device.type}</span>
+              <span className="device-type-pill">{device.brand || "SmartLife"}</span>
+            </div>
+            <button className="soft-toggle" onClick={() => onToggle(device)} disabled={!device.online}>
+              <div className="status-dot" style={{ color: device.on ? "#7cf29c" : "#f2a15b" }}></div>
+              <span className="fw-semibold">{device.on ? "An" : "Aus"}</span>
+              <i className={`bi ${device.on ? "bi-toggle-on" : "bi-toggle-off"} fs-4`}></i>
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    const AddDeviceDrawer = ({ onAdd }) => {
+      const [name, setName] = useState("");
+      const [room, setRoom] = useState("");
+      const [type, setType] = useState("Steckdose");
+      const [brand, setBrand] = useState("SmartLife");
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState("");
+
+      const reset = () => {
+        setName("");
+        setRoom("");
+        setType("Steckdose");
+        setBrand("SmartLife");
+        setError("");
+      };
+
+      const handleAdd = async () => {
+        if (!name.trim()) {
+          setError("Name fehlt");
+          return;
+        }
+        setLoading(true);
+        setError("");
+        try {
+          await onAdd({ name: name.trim(), room: room.trim() || "Unbekannt", type, brand });
+          reset();
+          const drawer = bootstrap.Offcanvas.getInstance("#addDeviceDrawer");
+          drawer?.hide();
+        } catch (e) {
+          setError(e.message || "Fehler beim Hinzufügen");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="offcanvas offcanvas-end" tabIndex="-1" id="addDeviceDrawer" aria-labelledby="addDeviceDrawerLabel" style={{ width: "380px" }}>
+          <div className="offcanvas-header">
+            <div>
+              <h5 className="offcanvas-title" id="addDeviceDrawerLabel">Gerät hinzufügen</h5>
+              <p className="mb-0 text-secondary small">Füge SmartLife oder andere Geräte hinzu.</p>
+            </div>
+            <button type="button" className="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div className="offcanvas-body d-flex flex-column">
+            <div className="mb-3">
+              <label className="form-label">Name</label>
+              <input className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder="z.B. Wohnzimmer Steckdose" />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Raum</label>
+              <input className="form-control" value={room} onChange={(e) => setRoom(e.target.value)} placeholder="Wohnzimmer" />
+            </div>
+            <div className="row">
+              <div className="col-6 mb-3">
+                <label className="form-label">Typ</label>
+                <select className="form-select" value={type} onChange={(e) => setType(e.target.value)}>
+                  <option>Steckdose</option>
+                  <option>Licht</option>
+                  <option>Sensor</option>
+                </select>
+              </div>
+              <div className="col-6 mb-3">
+                <label className="form-label">Brand</label>
+                <input className="form-control" value={brand} onChange={(e) => setBrand(e.target.value)} />
+              </div>
+            </div>
+            {error && <div className="alert alert-danger py-2">{error}</div>}
+            <div className="mt-auto">
+              <button className="btn add-button w-100" onClick={handleAdd} disabled={loading}>
+                {loading ? "Speichere..." : "Anlegen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const Filters = ({ search, setSearch, showOnlineOnly, setShowOnlineOnly }) => (
+      <div className="glass-card p-3 mb-3">
+        <div className="row g-3 align-items-center">
+          <div className="col-lg-8">
+            <div className="input-group">
+              <span className="input-group-text bg-transparent text-secondary border-0">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                className="form-control border-0 bg-transparent text-light"
+                placeholder="Geräte suchen..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="col-lg-4 text-lg-end">
+            <div className="form-check form-switch d-inline-flex align-items-center gap-2">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id="onlineOnly"
+                checked={showOnlineOnly}
+                onChange={(e) => setShowOnlineOnly(e.target.checked)}
+              />
+              <label className="form-check-label text-secondary" htmlFor="onlineOnly">Nur Online</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const App = () => {
+      const [devices, setDevices] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState("");
+      const [search, setSearch] = useState("");
+      const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+
+      const loadDevices = async () => {
+        setLoading(true);
+        setError("");
+        try {
+          const list = await smartLifeClient.listDevices();
+          setDevices(list);
+        } catch (e) {
+          setError(e.message || "Konnte Geräte nicht laden");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        loadDevices();
+      }, []);
+
+      const filtered = useMemo(() => {
+        return devices.filter((d) => {
+          const matchesSearch = d.name.toLowerCase().includes(search.toLowerCase()) || (d.room || "").toLowerCase().includes(search.toLowerCase());
+          const matchesOnline = showOnlineOnly ? d.online : true;
+          return matchesSearch && matchesOnline;
+        });
+      }, [devices, search, showOnlineOnly]);
+
+      const handleToggle = async (device) => {
+        const nextValue = !device.on;
+        setDevices((prev) => prev.map((d) => (d.id === device.id ? { ...d, on: nextValue } : d)));
+        try {
+          await smartLifeClient.setDeviceState(device.id, nextValue);
+        } catch (e) {
+          setError(e.message || "Schalten fehlgeschlagen");
+          setDevices((prev) => prev.map((d) => (d.id === device.id ? { ...d, on: device.on } : d)));
+        }
+      };
+
+      const handleAdd = async (payload) => {
+        const created = await smartLifeClient.addDevice(payload);
+        setDevices((prev) => [...prev, created]);
+      };
+
+      return (
+        <div className="mb-5">
+          <Filters search={search} setSearch={setSearch} showOnlineOnly={showOnlineOnly} setShowOnlineOnly={setShowOnlineOnly} />
+
+          {error && (
+            <div className="alert alert-danger d-flex align-items-center gap-2 glass-card border-0">
+              <i className="bi bi-exclamation-triangle-fill"></i>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="text-center py-5 text-secondary">Lade SmartLife Geräte...</div>
+          ) : (
+            <>
+              <div className="grid">
+                {filtered.map((device) => (
+                  <DeviceCard key={device.id} device={device} onToggle={handleToggle} />
+                ))}
+              </div>
+              {filtered.length === 0 && <div className="text-center text-secondary py-4">Keine Geräte gefunden.</div>}
+            </>
+          )}
+
+          <div className="blurred-divider"></div>
+
+          <div className="glass-card p-3">
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <div>
+                <div className="fw-semibold">Letzte Aktionen</div>
+                <div className="text-secondary small">Mock-Daten – häng echte Events an, sobald die API steht.</div>
+              </div>
+              <span className="badge-soft badge rounded-pill">Live</span>
+            </div>
+            <div className="table-responsive">
+              <table className="table table-dark table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Gerät</th>
+                    <th>Aktion</th>
+                    <th>Zeit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Wohnzimmer Steckdose</td>
+                    <td className="text-success"><i className="bi bi-power me-1"></i>Ein</td>
+                    <td>vor 1 Min</td>
+                  </tr>
+                  <tr>
+                    <td>Schreibtisch</td>
+                    <td className="text-warning"><i className="bi bi-wifi-off me-1"></i>Offline</td>
+                    <td>vor 6 Min</td>
+                  </tr>
+                  <tr>
+                    <td>Küche Kaffeemaschine</td>
+                    <td className="text-danger"><i className="bi bi-power me-1"></i>Aus</td>
+                    <td>vor 12 Min</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <AddDeviceDrawer onAdd={handleAdd} />
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
