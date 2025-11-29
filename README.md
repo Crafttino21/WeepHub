@@ -3,9 +3,11 @@
 Self-hosted, privacy-first smart home control hub for Raspberry Pi and local servers. Manage devices from SmartThings, Tuya, IFTTT, Wake-on-LAN, and custom APIs inside one unified dashboard that lives entirely on your local network.
 
 ## 🚀 Overview
-- Node.js + Express backend serving a static dashboard from `public/`
-- SmartThings API integration via personal access token
-- Local-only by default (`http://localhost:3001`)
+- Node.js + Express backend serving React-based login, dashboard, and API-Management from `public/`
+- Local user system (hashed password, session cookie) stored in `data/`
+- SmartThings API integration via PATs (multiple tokens supported, aggregated)
+- Encrypted integration storage in `data/` with local key
+- Local-only by default (`http://localhost:3001`) with i18n (EN/DE)
 - .env-driven configuration; no cloud relay
 
 ## 🔒 Philosophy & Privacy
@@ -15,11 +17,13 @@ Self-hosted, privacy-first smart home control hub for Raspberry Pi and local ser
 - Extensible without surrendering control: plugins remain opt-in and local.
 
 ## ✨ Features
-**Current (MVP)**
-- SmartThings devices load, report status (on/off + health), and toggle from the dashboard.
-- Backend proxy endpoints for SmartThings with token-based auth.
-- Static frontend served from `/public`.
-- Runs on `localhost:3001` with `.env` configuration.
+**Current**
+- Login/Account creation (local file-based auth, scrypt hash, session cookie).
+- SmartThings devices load, report status (on/off + health), and toggle from the dashboard (multiple PATs aggregated).
+- Encrypted storage for integration tokens in `data/integrations.json` with local AES key (`data/secret.key`).
+- Live activity log (toggle + online/offline) persisted to `logs/activity.log` with UI table and clear action.
+- Static frontend served from `/public` (login `index.html`, dashboard `dashboard.html`, API management `api.html`).
+- Runs on `localhost:3001` with `.env` configuration or saved tokens.
 
 **Planned**
 - Plugin system (widgets, integrations, tools).
@@ -34,19 +38,27 @@ Self-hosted, privacy-first smart home control hub for Raspberry Pi and local ser
 
 ## 🧰 Tech Stack
 - Node.js + Express
-- Static frontend (`public/index.html`)
+- Static frontend (React via Babel in `public/*.html`)
 - Fetch-based SmartThings API calls
 - `dotenv` for configuration
+- AES-GCM for local secret storage (integration tokens)
 
 ## 📂 Project Structure
 ```
 WeepHub/
-├─ server.js          # Express server + SmartThings proxy endpoints
-├─ package.json       # Scripts and dependencies
+├─ server.js            # Express server, auth, SmartThings proxy, logs, encrypted tokens
+├─ package.json         # Scripts and dependencies
 ├─ public/
-│  └─ index.html      # Static dashboard frontend
-├─ .env.example       # Sample environment variables
-└─ .env               # Local secrets (not committed)
+│  ├─ index.html        # Login/Signup (React, i18n)
+│  ├─ dashboard.html    # Dashboard (devices, logs, i18n)
+│  └─ api.html          # API Management (integrations, tokens, i18n)
+├─ data/                # Local auth/tokens (ignored by git)
+│  ├─ user.json         # Local user (hashed)
+│  ├─ secret.key        # Local AES key for integrations
+│  └─ integrations.json # Encrypted integration entries
+├─ logs/activity.log    # Persisted activity log
+├─ .env.example         # Sample environment variables
+└─ .env                 # Local secrets (not committed)
 ```
 
 ## ⚙️ Installation
@@ -66,7 +78,7 @@ SMARTTHINGS_TOKEN=your_personal_access_token
 PORT=3001
 ```
 
-- `SMARTTHINGS_TOKEN` (required): SmartThings PAT with Devices Read/Write.
+- `SMARTTHINGS_TOKEN` (optional): SmartThings PAT with Devices Read/Write; if omitted, use API Management to add tokens.
 - `PORT` (optional): Defaults to `3001`.
 
 ## ▶️ Usage
@@ -75,8 +87,9 @@ npm start
 # App runs at http://localhost:3001
 ```
 
-- Open the dashboard in your browser.
-- Devices should load automatically; toggle devices directly from the UI.
+- Öffne `http://localhost:3001` → Account anlegen oder einloggen.
+- Im Dashboard über Avatar-Dropdown zu „API Management“ und SmartThings PAT(s) hinzufügen/aktivieren.
+- Geräte laden automatisch; Toggle/Status-Events landen im Log (persistiert).
 
 ## 🧩 Plugin System (Planned)
 - Goal: lightweight plugin layer for integrations (weather, tools, device APIs) and UI widgets.
@@ -85,9 +98,9 @@ npm start
 
 ## 🛡️ Security Philosophy
 - Local-first deployment keeps control traffic off third-party clouds.
-- Credentials stay in `.env`; future plans include encrypted storage.
-- Authentication/roles are planned; the current MVP has no auth—run on trusted networks only.
-- External exposure (port-forwarding/reverse-proxy) will remain opt-in.
+- Credentials stay lokal: `.env` oder verschlüsselt in `data/` (AES key lokal abgelegt).
+- Lokales Konto mit scrypt-Hash + HttpOnly Session-Cookie; (noch) kein RBAC.
+- External exposure (port-forwarding/reverse-proxy) bleibt opt-in.
 
 ## 🗺️ Roadmap
 - Add authentication and role-based access.
