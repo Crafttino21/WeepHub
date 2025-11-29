@@ -7,6 +7,7 @@ Self-hosted, privacy-first smart home control hub for Raspberry Pi and local ser
 - Local user system (hashed password, session cookie) stored in `data/`
 - SmartThings API integration via PATs (multiple tokens supported, aggregated)
 - Encrypted integration storage in `data/` with local key
+- Local scheduler for routines (configurable check interval via Settings)
 - Local-only by default (`http://localhost:3001`) with i18n (EN/DE)
 - .env-driven configuration; no cloud relay
 
@@ -18,24 +19,23 @@ Self-hosted, privacy-first smart home control hub for Raspberry Pi and local ser
 
 ## ✨ Features
 **Current**
-- Login/Account creation (local file-based auth, scrypt hash, session cookie).
+- Login/account creation (local file-based auth, scrypt hash, session cookie).
 - SmartThings devices load, report status (on/off + health), and toggle from the dashboard (multiple PATs aggregated).
 - Encrypted storage for integration tokens in `data/integrations.json` with local AES key (`data/secret.key`).
 - Live activity log (toggle + online/offline) persisted to `logs/activity.log` with UI table and clear action.
-- Zeitbasierte Routinen mit Mehrfach-Aktionen: Schalten, Dimmen, Temperatur setzen oder Custom SmartThings-Kommandos, ausgeführt vom lokalen Scheduler.
+- Routines with multiple actions: switch, dim, set temperature, or custom SmartThings commands; triggers by time (optional weekdays) or interval; local scheduler with adjustable check interval.
+- Debug/overlay: Server time overlay toggled via Settings; optional in-app debug console.
 - Static frontend served from `/public` (login `index.html`, dashboard `dashboard.html`, API management `api.html`).
 - Runs on `localhost:3001` with `.env` configuration or saved tokens.
 
 **Planned**
-- Plugin system (widgets, integrations, tools).
-- Multi-API support (SmartThings, Tuya, IFTTT, local devices, custom APIs, Wake-on-LAN).
-- Encrypted credential storage.
-- File-based authentication with role-based access (admin/user).
+- Plugin system (widgets, integrations, tools) with a lightweight SDK.
+- More integrations (Tuya, IFTTT, local/LAN APIs, Wake-on-LAN) and richer device capabilities (temperature, scenes, levels, sensors).
+- Encrypted credential storage hardening and optional RBAC (admin/user).
 - Optional port-forwarding / reverse-proxy mode for external hosting.
-- Theme engine and dashboard widgets.
-- Extension SDK for community plugins.
-- Home automation rules plus device groups/scenes.
-- Offline-first behavior.
+- Theme engine, dashboard widgets, and reusable UI components.
+- Expanded automation: device groups/scenes, additional triggers/conditions, richer scheduling.
+- Offline-first behavior and caching.
 
 ## 🧰 Tech Stack
 - Node.js + Express
@@ -52,15 +52,18 @@ WeepHub/
 ├─ public/
 │  ├─ index.html        # Login/Signup (React, i18n)
 │  ├─ dashboard.html    # Dashboard (devices, logs, i18n)
-│  ├─ api.html          # API Management (integrations, tokens, i18n)
-│  ├─ settings.html     # Settings (UI prefs, language, polling)
-│  └─ routines.html     # Routinen-Editor (zeitbasierte Automationen)
+│  ├─ api.html          # API management (integrations, tokens, i18n)
+│  ├─ settings.html     # Settings (UI prefs, language, polling, routine interval, overlays)
+│  ├─ routines.html     # Routine editor (time/interval triggers, multi-actions)
+│  └─ time-overlay.js   # Optional server time overlay (toggle via Settings)
 ├─ data/                # Local auth/tokens (ignored by git)
 │  ├─ user.json         # Local user (hashed)
 │  ├─ secret.key        # Local AES key for integrations
 │  ├─ integrations.json # Encrypted integration entries
-│  └─ routines.json     # Routinen (zeitbasierte Automationen)
+│  ├─ routines.json     # Routines (time/weekday/interval triggers, multi-actions)
+│  └─ settings.json     # Server-side settings (routine interval)
 ├─ logs/activity.log    # Persisted activity log
+├─ nodemon.json         # Dev: ignores data/logs for hot reload
 ├─ .env.example         # Sample environment variables
 └─ .env                 # Local secrets (not committed)
 ```
@@ -88,12 +91,14 @@ PORT=3001
 ## ▶️ Usage
 ```bash
 npm start
+# or: npm run dev (nodemon, ignores data/logs)
 # App runs at http://localhost:3001
 ```
 
-- Öffne `http://localhost:3001` → Account anlegen oder einloggen.
-- Im Dashboard über Avatar-Dropdown zu „API Management“ und SmartThings PAT(s) hinzufügen/aktivieren.
-- Geräte laden automatisch; Toggle/Status-Events landen im Log (persistiert).
+- Open `http://localhost:3001` → create or log into your local account.
+- In the dashboard avatar menu, go to “API Management” and add/enable SmartThings PAT(s).
+- Devices load automatically; toggle/status events are persisted to the activity log.
+- In “Settings”, adjust the routine check interval and optionally enable the server time overlay.
 
 ## 🧩 Plugin System (Planned)
 - Goal: lightweight plugin layer for integrations (weather, tools, device APIs) and UI widgets.
@@ -107,12 +112,11 @@ npm start
 - External exposure (port-forwarding/reverse-proxy) bleibt opt-in.
 
 ## 🗺️ Roadmap
-- Add authentication and role-based access.
-- Implement plugin host + SDK.
-- Expand integrations (Tuya, IFTTT, local APIs, Wake-on-LAN).
-- Add dashboard widgets, themes, and device groups/scenes.
-- Ship automation rules and offline-first behavior.
-- Harden credential storage and external hosting options.
+- RBAC + hardened credential storage.
+- Plugin host + SDK, plus Tuya/IFTTT/local API connectors.
+- Automation upgrades: more trigger types (conditions, sensors), groups/scenes, reusable actions.
+- UI extensions: themes, widgets, and reusable blocks.
+- Offline-first and safe external exposure options.
 
 ## 🤝 Contributing
 - Fork the repo and create a feature branch.
