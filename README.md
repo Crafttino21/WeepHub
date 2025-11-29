@@ -53,7 +53,7 @@ WeepHub/
 Prerequisites: Node.js and npm/yarn installed on your machine (tested with the current LTS).
 
 ```bash
-git clone <repo-url> weephub
+git clone https://github.com/Crafttino21/WeepHub.git
 cd weephub
 npm install
 ```
