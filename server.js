@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import path from "path";
+import fs from "fs";
+import { promises as fsPromises } from "fs";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -8,9 +10,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
+app.use((req, _res, next) => {
+  req.requestTime = Date.now();
+  next();
+});
 
 const SMARTTHINGS_TOKEN = process.env.SMARTTHINGS_TOKEN;
 const PORT = process.env.PORT || 3001;
+const LOG_DIR = path.join(__dirname, "logs");
+const LOG_FILE = path.join(LOG_DIR, "activity.log");
 
 if (!SMARTTHINGS_TOKEN) {
   console.error("❌ SMARTTHINGS_TOKEN fehlt in der .env");
@@ -18,6 +26,53 @@ if (!SMARTTHINGS_TOKEN) {
 }
 
 console.log("✅ SmartThings API aktiv");
+
+async function ensureLogFile() {
+  try {
+    await fsPromises.mkdir(LOG_DIR, { recursive: true });
+    if (!fs.existsSync(LOG_FILE)) {
+      await fsPromises.writeFile(LOG_FILE, "", "utf8");
+    }
+  } catch (err) {
+    console.error("❌ Konnte Logdatei nicht anlegen:", err);
+  }
+}
+
+async function appendLog(entry) {
+  const logEntry = {
+    device: entry.device || "Unbekannt",
+    action: entry.action || "unknown",
+    timestamp: entry.timestamp || Date.now()
+  };
+  const line = JSON.stringify(logEntry);
+  try {
+    await fsPromises.appendFile(LOG_FILE, line + "\n", "utf8");
+  } catch (err) {
+    console.error("❌ Schreiben ins Log fehlgeschlagen:", err);
+  }
+}
+
+async function readLogs(limit = 100) {
+  try {
+    const data = await fsPromises.readFile(LOG_FILE, "utf8");
+    const lines = data.trim() === "" ? [] : data.trim().split("\n");
+    const parsed = lines
+      .map((line) => {
+        try {
+          return JSON.parse(line);
+        } catch (_) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+    return parsed.slice(-limit).reverse(); // neueste zuerst
+  } catch (err) {
+    console.error("❌ Lesen des Logs fehlgeschlagen:", err);
+    return [];
+  }
+}
+
+await ensureLogFile();
 
 // ----------------------------
 // 🔧 DEVICE STATUS + HEALTH
@@ -116,7 +171,7 @@ app.get("/api/smartlife/devices", async (_req, res) => {
 // ----------------------------
 app.post("/api/smartlife/devices/:id/state", async (req, res) => {
   const { id } = req.params;
-  const { on } = req.body;
+  const { on, deviceName } = req.body;
 
   try {
     const r = await fetch(
@@ -148,9 +203,44 @@ app.post("/api/smartlife/devices/:id/state", async (req, res) => {
       result,
       state: liveStatus
     });
+
   } catch (err) {
     console.error("❌ SCHALT FEHLER:", err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------------------
+// 📝 LOG ENDPOINTS
+// ----------------------------
+app.get("/api/logs", async (_req, res) => {
+  const logs = await readLogs(120);
+  res.json(logs);
+});
+
+app.post("/api/logs", async (req, res) => {
+  const { device, action, timestamp } = req.body || {};
+  if (!device || !action) {
+    return res.status(400).json({ error: "device und action sind erforderlich" });
+  }
+
+  const logEntry = {
+    device: String(device).slice(0, 200),
+    action: String(action).slice(0, 50),
+    timestamp: Number.isFinite(timestamp) ? timestamp : Date.now()
+  };
+
+  await appendLog(logEntry);
+  res.json({ success: true, log: logEntry });
+});
+
+app.delete("/api/logs", async (_req, res) => {
+  try {
+    await fsPromises.writeFile(LOG_FILE, "", "utf8");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Log löschen fehlgeschlagen:", err);
+    res.status(500).json({ error: "Konnte Log nicht löschen" });
   }
 });
 

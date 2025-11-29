@@ -17,6 +17,10 @@
     .container {
       max-width: 1200px;
     }
+    .activity-table th:first-child,
+    .activity-table td:first-child {
+      padding-left: 18px;
+    }
 
     :root {
       --bg: #0a0c10;
@@ -258,6 +262,89 @@
     .table-dark td {
       color: #dce4f5;
     }
+
+    /* Activity log styling */
+    .activity-card {
+      border-radius: 18px;
+      overflow: hidden;
+    }
+    .activity-table {
+      margin: 0;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0.02), rgba(124, 231, 255, 0.03));
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .activity-table thead th {
+      background: rgba(255, 255, 255, 0.04);
+      color: #e6ecf5;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .activity-table tbody tr + tr td {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .activity-table td,
+    .activity-table th {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      background: transparent !important;
+    }
+    .badge-soft {
+      border-radius: 999px;
+    }
+    .ghost-button {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.04);
+      color: #dce4f5;
+      padding: 6px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 150ms ease;
+    }
+    .ghost-button:hover {
+      border-color: rgba(124, 231, 255, 0.6);
+      color: #7ce7ff;
+    }
+
+    .modal-backdrop-custom {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 1050;
+    }
+    .modal-card {
+      position: fixed;
+      z-index: 1060;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+    .modal-panel {
+      background: #0f141d;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+      max-width: 420px;
+      width: 100%;
+      padding: 18px 18px 14px;
+      color: #e6ecf5;
+    }
+    .modal-panel h5 {
+      margin-bottom: 8px;
+    }
+    .modal-footer-ghost {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 12px;
+    }
   </style>
 </head>
 <body>
@@ -293,7 +380,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <script type="text/babel">
-    const { useEffect, useMemo, useState } = React;
+    const { useEffect, useMemo, useState, useCallback, useRef } = React;
 
     // SmartLife-aware client using local Express endpoints. Swap fetch URLs for your proxy if needed.
     const smartLifeClient = (() => {
@@ -303,11 +390,11 @@
           if (!res.ok) throw new Error("Geräte laden fehlgeschlagen");
           return res.json();
         },
-        async setDeviceState(id, on) {
+        async setDeviceState(id, on, deviceName) {
           const res = await fetch(`/api/smartlife/devices/${id}/state`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ on })
+            body: JSON.stringify({ on, deviceName })
           });
           if (!res.ok) throw new Error("Schalten fehlgeschlagen");
           return res.json();
@@ -323,6 +410,27 @@
         }
       };
     })();
+
+    const formatRelativeTime = (timestamp) => {
+      const diffSec = Math.round((Date.now() - timestamp) / 1000);
+      if (diffSec < 5) return "gerade eben";
+      if (diffSec < 60) return `vor ${diffSec} s`;
+      const diffMin = Math.round(diffSec / 60);
+      if (diffMin < 60) return `vor ${diffMin} Min`;
+      const diffHours = Math.round(diffMin / 60);
+      if (diffHours < 24) return `vor ${diffHours} Std`;
+      const diffDays = Math.round(diffHours / 24);
+      return `vor ${diffDays} Tag${diffDays === 1 ? "" : "en"}`;
+    };
+
+    const ACTION_META = {
+      on: { label: "Ein", className: "text-success", icon: "bi-power" },
+      off: { label: "Aus", className: "text-danger", icon: "bi-power" },
+      online: { label: "Online", className: "text-success", icon: "bi-wifi" },
+      offline: { label: "Offline", className: "text-warning", icon: "bi-wifi-off" }
+    };
+
+    const getActionMeta = (action) => ACTION_META[action] || { label: action, className: "text-secondary", icon: "bi-dot" };
 
     const StatusPill = ({ online }) => (
       <span className="badge rounded-pill badge-soft d-inline-flex align-items-center gap-1">
@@ -392,6 +500,29 @@
             </button>
           </div>
         </div>
+      );
+    };
+
+    const ConfirmModal = ({ open, title, body, confirmLabel = "Ja", cancelLabel = "Abbrechen", onConfirm, onCancel, loading }) => {
+      if (!open) return null;
+      return (
+        <>
+          <div className="modal-backdrop-custom"></div>
+          <div className="modal-card">
+            <div className="modal-panel">
+              <h5 className="fw-semibold mb-1">{title}</h5>
+              <p className="text-secondary mb-0">{body}</p>
+              <div className="modal-footer-ghost">
+                <button className="btn btn-outline-light btn-sm" onClick={onCancel} disabled={loading}>
+                  {cancelLabel}
+                </button>
+                <button className="btn btn-danger btn-sm" onClick={onConfirm} disabled={loading}>
+                  {loading ? "Leere..." : confirmLabel}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       );
     };
 
@@ -511,23 +642,135 @@
       const [error, setError] = useState("");
       const [search, setSearch] = useState("");
       const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+      const [activity, setActivity] = useState([]);
+      const devicesRef = useRef([]);
+      const activityRef = useRef([]);
+      const [clearing, setClearing] = useState(false);
+      const [showConfirm, setShowConfirm] = useState(false);
 
-      const loadDevices = async () => {
-        setLoading(true);
-        setError("");
+      useEffect(() => {
+        devicesRef.current = devices;
+      }, [devices]);
+
+      useEffect(() => {
+        activityRef.current = activity;
+      }, [activity]);
+
+      const persistLog = useCallback(async (entry) => {
         try {
-          const list = await smartLifeClient.listDevices();
-          setDevices(list);
+          await fetch("/api/logs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(entry)
+          });
         } catch (e) {
-          setError(e.message || "Konnte Geräte nicht laden");
-        } finally {
-          setLoading(false);
+          // Silent fail; UI hat schon lokale Kopie.
         }
-      };
+      }, []);
+
+      const performClear = useCallback(async () => {
+        if (clearing) return;
+        setClearing(true);
+        try {
+          const res = await fetch("/api/logs", { method: "DELETE" });
+          if (!res.ok) throw new Error("Konnte Log nicht löschen");
+          setActivity([]);
+        } catch (e) {
+          setError(e.message || "Konnte Log nicht löschen");
+        } finally {
+          setClearing(false);
+          setShowConfirm(false);
+        }
+      }, [clearing]);
+
+      const addLogEntry = useCallback(
+        (entry, { persist = false } = {}) => {
+          const item = {
+            id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            timestamp: Date.now(),
+            ...entry
+          };
+          setActivity((prev) => [item, ...prev].slice(0, 120));
+          if (persist) {
+            persistLog({ device: item.device, action: item.action, timestamp: item.timestamp });
+          }
+        },
+        [persistLog]
+      );
+
+      const loadLogs = useCallback(async () => {
+        try {
+          const res = await fetch("/api/logs");
+          if (!res.ok) throw new Error("Konnte Logs nicht laden");
+          const logs = await res.json();
+          const mapped = (logs || []).map((log, idx) => ({
+            id: `${log.timestamp || idx}-${idx}`,
+            device: log.device || "Unbekannt",
+            action: log.action || "unknown",
+            timestamp: log.timestamp || Date.now()
+          }));
+          setActivity(mapped);
+        } catch (_) {
+          // ignore, UI kann weiterarbeiten
+        }
+      }, []);
+
+      const detectOnlineChanges = useCallback(
+        (prevList, nextList) => {
+          const prevMap = new Map(prevList.map((d) => [d.id, d]));
+          nextList.forEach((device) => {
+            const prev = prevMap.get(device.id);
+            if (!prev) return;
+            if (prev.online !== device.online) {
+              addLogEntry(
+                {
+                  device: device.name,
+                  action: device.online ? "online" : "offline"
+                },
+                { persist: true }
+              );
+            }
+          });
+        },
+        [addLogEntry]
+      );
+
+      const loadDevices = useCallback(
+        async ({ withDiff = false, silent = false } = {}) => {
+          if (!silent) {
+            setLoading(true);
+            setError("");
+          }
+          try {
+            const list = await smartLifeClient.listDevices();
+            if (withDiff) {
+              detectOnlineChanges(devicesRef.current, list);
+            }
+            setDevices(list);
+          } catch (e) {
+            if (!silent) {
+              setError(e.message || "Konnte Geräte nicht laden");
+            }
+          } finally {
+            if (!silent) {
+              setLoading(false);
+            }
+          }
+        },
+        [detectOnlineChanges]
+      );
 
       useEffect(() => {
         loadDevices();
-      }, []);
+        loadLogs();
+      }, [loadDevices, loadLogs]);
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          loadDevices({ withDiff: true, silent: true });
+        }, 20000);
+        return () => clearInterval(interval);
+      }, [loadDevices]);
 
       const filtered = useMemo(() => {
         return devices.filter((d) => {
@@ -541,7 +784,20 @@
         const nextValue = !device.on;
         setDevices((prev) => prev.map((d) => (d.id === device.id ? { ...d, on: nextValue } : d)));
         try {
-          await smartLifeClient.setDeviceState(device.id, nextValue);
+          const result = await smartLifeClient.setDeviceState(device.id, nextValue, device.name);
+          const liveState = result.state || {};
+          const finalOn = typeof liveState.on === "boolean" ? liveState.on : nextValue;
+          const finalOnline = typeof liveState.online === "boolean" ? liveState.online : device.online;
+          setDevices((prev) =>
+            prev.map((d) => (d.id === device.id ? { ...d, on: finalOn, online: finalOnline } : d))
+          );
+          addLogEntry(
+            {
+              device: device.name,
+              action: finalOn ? "on" : "off"
+            },
+            { persist: true }
+          );
         } catch (e) {
           setError(e.message || "Schalten fehlgeschlagen");
           setDevices((prev) => prev.map((d) => (d.id === device.id ? { ...d, on: device.on } : d)));
@@ -579,16 +835,22 @@
 
           <div className="blurred-divider"></div>
 
-          <div className="glass-card p-3">
+          <div className="glass-card p-3 activity-card">
             <div className="d-flex align-items-center justify-content-between mb-3">
               <div>
                 <div className="fw-semibold">Letzte Aktionen</div>
-                <div className="text-secondary small">Mock-Daten – häng echte Events an, sobald die API steht.</div>
+                <div className="text-secondary small">Schalten & Online-Status werden live geloggt.</div>
               </div>
-              <span className="badge-soft badge rounded-pill">Live</span>
+              <div className="d-flex align-items-center gap-2">
+                <button className="ghost-button btn btn-sm" onClick={() => setShowConfirm(true)} disabled={clearing}>
+                  <i className="bi bi-trash3"></i>
+                  {clearing ? "Leere..." : "Log leeren"}
+                </button>
+                <span className="badge-soft badge rounded-pill">Live</span>
+              </div>
             </div>
-            <div className="table-responsive">
-              <table className="table table-dark table-sm align-middle mb-0">
+            <div className="table-responsive rounded-4">
+              <table className="table table-dark table-sm align-middle mb-0 activity-table">
                 <thead>
                   <tr>
                     <th>Gerät</th>
@@ -597,27 +859,41 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>Wohnzimmer Steckdose</td>
-                    <td className="text-success"><i className="bi bi-power me-1"></i>Ein</td>
-                    <td>vor 1 Min</td>
-                  </tr>
-                  <tr>
-                    <td>Schreibtisch</td>
-                    <td className="text-warning"><i className="bi bi-wifi-off me-1"></i>Offline</td>
-                    <td>vor 6 Min</td>
-                  </tr>
-                  <tr>
-                    <td>Küche Kaffeemaschine</td>
-                    <td className="text-danger"><i className="bi bi-power me-1"></i>Aus</td>
-                    <td>vor 12 Min</td>
-                  </tr>
+                  {activity.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="text-center text-secondary">Noch keine Aktionen.</td>
+                    </tr>
+                  ) : (
+                    activity.map((log) => {
+                      const meta = getActionMeta(log.action);
+                      return (
+                        <tr key={log.id}>
+                          <td>{log.device}</td>
+                          <td className={meta.className}>
+                            <i className={`bi ${meta.icon} me-1`}></i>
+                            {meta.label}
+                          </td>
+                          <td>{formatRelativeTime(log.timestamp)}</td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
 
           <AddDeviceDrawer onAdd={handleAdd} />
+          <ConfirmModal
+            open={showConfirm}
+            title="Log wirklich leeren?"
+            body="Alle gespeicherten Einträge werden gelöscht und können nicht wiederhergestellt werden."
+            confirmLabel="Log löschen"
+            cancelLabel="Abbrechen"
+            onConfirm={performClear}
+            onCancel={() => setShowConfirm(false)}
+            loading={clearing}
+          />
         </div>
       );
     };
