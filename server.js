@@ -3,6 +3,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { promises as fsPromises } from "fs";
+import crypto from "crypto";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,6 +20,9 @@ const SMARTTHINGS_TOKEN = process.env.SMARTTHINGS_TOKEN;
 const PORT = process.env.PORT || 3001;
 const LOG_DIR = path.join(__dirname, "logs");
 const LOG_FILE = path.join(LOG_DIR, "activity.log");
+const DATA_DIR = path.join(__dirname, "data");
+const USER_FILE = path.join(DATA_DIR, "user.json");
+const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 Tage
 
 if (!SMARTTHINGS_TOKEN) {
   console.error("❌ SMARTTHINGS_TOKEN fehlt in der .env");
@@ -35,6 +39,17 @@ async function ensureLogFile() {
     }
   } catch (err) {
     console.error("❌ Konnte Logdatei nicht anlegen:", err);
+  }
+}
+
+async function ensureUserFile() {
+  try {
+    await fsPromises.mkdir(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(USER_FILE)) {
+      await fsPromises.writeFile(USER_FILE, "", "utf8");
+    }
+  } catch (err) {
+    console.error("❌ Konnte Userdatei nicht anlegen:", err);
   }
 }
 
@@ -72,6 +87,56 @@ async function readLogs(limit = 100) {
   }
 }
 
+async function readUser() {
+  try {
+    const content = await fsPromises.readFile(USER_FILE, "utf8");
+    if (!content.trim()) return null;
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
+async function writeUser(user) {
+  await fsPromises.writeFile(USER_FILE, JSON.stringify(user, null, 2), "utf8");
+}
+
+function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  return { salt, hash };
+}
+
+function verifyPassword(password, salt, expectedHash) {
+  const { hash } = hashPassword(password, salt);
+  return crypto.timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(expectedHash, "hex"));
+}
+
+function parseCookies(header) {
+  if (!header) return {};
+  return Object.fromEntries(
+    header.split(";").map((part) => {
+      const [key, ...rest] = part.trim().split("=");
+      return [key, rest.join("=")];
+    })
+  );
+}
+
+function makeSessionToken(user) {
+  const payload = `${user.username}:${user.hash}:${user.salt}`;
+  return crypto.createHash("sha256").update(payload).digest("hex");
+}
+
+function validateSession(req, user) {
+  if (!user) return null;
+  const cookies = parseCookies(req.headers.cookie || "");
+  const token = cookies.sid;
+  if (!token) return null;
+  const expected = makeSessionToken(user);
+  if (token !== expected) return null;
+  return user.username;
+}
+
+await ensureUserFile();
 await ensureLogFile();
 
 // ----------------------------
@@ -245,12 +310,82 @@ app.delete("/api/logs", async (_req, res) => {
 });
 
 // ----------------------------
+// 👤 LOCAL USER + SESSION
+// ----------------------------
+app.get("/api/user/status", async (req, res) => {
+  const user = await readUser();
+  const username = validateSession(req, user);
+  res.json({
+    hasUser: Boolean(user),
+    authenticated: Boolean(username),
+    username: username || null
+  });
+});
+
+app.post("/api/user/setup", async (req, res) => {
+  const existing = await readUser();
+  if (existing) {
+    return res.status(400).json({ error: "User existiert bereits" });
+  }
+  const { username, password } = req.body || {};
+  if (!username || !password || String(password).length < 6) {
+    return res.status(400).json({ error: "Username/Passwort ungültig (min. 6 Zeichen)" });
+  }
+  const trimmedUser = String(username).trim();
+  const { salt, hash } = hashPassword(String(password));
+  const user = { username: trimmedUser, salt, hash, createdAt: Date.now() };
+  await writeUser(user);
+  const token = makeSessionToken(user);
+  res
+    .cookie("sid", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: SESSION_MAX_AGE_MS
+    })
+    .json({ success: true, username: trimmedUser });
+});
+
+app.post("/api/user/login", async (req, res) => {
+  const user = await readUser();
+  if (!user) return res.status(400).json({ error: "Kein User angelegt" });
+  const { username, password } = req.body || {};
+  if (!username || !password) return res.status(400).json({ error: "Fehlende Credentials" });
+  if (String(username).trim() !== user.username) return res.status(401).json({ error: "Ungültige Credentials" });
+  const ok = verifyPassword(String(password), user.salt, user.hash);
+  if (!ok) return res.status(401).json({ error: "Ungültige Credentials" });
+  const token = makeSessionToken(user);
+  res
+    .cookie("sid", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: SESSION_MAX_AGE_MS
+    })
+    .json({ success: true, username: user.username });
+});
+
+app.post("/api/user/logout", (req, res) => {
+  res
+    .cookie("sid", "", {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 0
+    })
+    .json({ success: true });
+});
+
+// ----------------------------
 // ✅ FRONTEND
 // ----------------------------
 const publicDir = path.join(__dirname, "public");
 app.use(express.static(publicDir));
 
-app.get("*", (_, res) => {
+// Serve dashboard explicitly
+app.get("/dashboard", (_req, res) => {
+  res.sendFile(path.join(publicDir, "dashboard.html"));
+});
+
+// Default to login page for other routes
+app.get("*", (_req, res) => {
   res.sendFile(path.join(publicDir, "index.html"));
 });
 

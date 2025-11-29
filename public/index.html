@@ -1,316 +1,63 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WeepHub Smart Home</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
-  />
+  <title>WeepHub Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
   <style>
-    /* Layout tuning */
-    .container {
-      max-width: 1200px;
-    }
-    .activity-table th:first-child,
-    .activity-table td:first-child {
-      padding-left: 18px;
-    }
-
     :root {
       --bg: #0a0c10;
       --card: rgba(255, 255, 255, 0.06);
       --card-border: rgba(255, 255, 255, 0.16);
       --accent: #7ce7ff;
       --accent-2: #8b5cf6;
-      --glow: 0 10px 45px rgba(124, 231, 255, 0.35);
       --text-muted: #b6c2d9;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: radial-gradient(circle at 20% 20%, rgba(124, 231, 255, 0.12), transparent 25%),
         radial-gradient(circle at 80% 0%, rgba(139, 92, 246, 0.25), transparent 30%),
         radial-gradient(circle at 60% 70%, rgba(124, 231, 255, 0.18), transparent 25%),
         var(--bg);
       color: #e6ecf5;
-      overflow-x: hidden;
       font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 16px;
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .device-id {
-      font-size: 0.82rem;
-      color: #9babc4;
-      word-break: break-all;
-    }
-
-    .glass-card {
+    .card-soft {
       background: var(--card);
       border: 1px solid var(--card-border);
       border-radius: 18px;
-      backdrop-filter: blur(8px);
+      padding: 20px;
+      width: 100%;
+      max-width: 460px;
       box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
-      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-      position: relative;
-      overflow: hidden;
     }
-
-    .device-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: radial-gradient(circle at 30% 30%, rgba(124, 231, 255, 0.15), rgba(0, 0, 0, 0.25));
-      display: grid;
-      place-items: center;
+    .brand {
+      font-weight: 700;
+      letter-spacing: -0.03em;
     }
-    .device-icon svg {
-      width: 30px;
-      height: 30px;
-    }
-
-    .glass-card::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(120% 120% at 20% 20%, rgba(124, 231, 255, 0.08), transparent 55%);
-      opacity: 0;
-      transition: opacity 180ms ease;
-      pointer-events: none;
-    }
-
-    .glass-card:hover {
-      transform: translateY(-6px);
-      border-color: rgba(124, 231, 255, 0.45);
-      box-shadow: var(--glow);
-    }
-
-    .glass-card:hover::after {
-      opacity: 1;
-    }
-
-    .soft-toggle {
-      background: linear-gradient(120deg, rgba(124, 231, 255, 0.25), rgba(139, 92, 246, 0.25));
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      color: #e6ecf5;
-      transition: background 160ms ease, transform 160ms ease, border-color 160ms ease;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    }
-
-    .soft-toggle:hover {
-      transform: translateY(-2px);
-      border-color: rgba(124, 231, 255, 0.5);
-    }
-
-    .status-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      box-shadow: 0 0 12px currentColor;
-    }
-
-    .floating-shape {
-      position: absolute;
-      width: 260px;
-      height: 260px;
-      background: radial-gradient(circle, rgba(124, 231, 255, 0.25), transparent 70%);
-      filter: blur(35px);
-      animation: float 14s ease-in-out infinite alternate;
-      opacity: 0.65;
-    }
-
-    .floating-shape.s2 {
-      width: 340px;
-      height: 340px;
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.28), transparent 65%);
-      animation-duration: 16s;
-    }
-
-    @keyframes float {
-      from {
-        transform: translate3d(0, -12px, 0);
-      }
-      to {
-        transform: translate3d(0, 18px, 0);
-      }
-    }
-
-    .badge-soft {
-      background: rgba(124, 231, 255, 0.18);
-      color: #d6f6ff;
-      border: 1px solid rgba(124, 231, 255, 0.35);
-    }
-
-    .hero {
-      position: relative;
-      padding: 36px 24px;
-      border-radius: 20px;
-      overflow: hidden;
-      background: linear-gradient(120deg, rgba(124, 231, 255, 0.12), rgba(139, 92, 246, 0.08), rgba(124, 231, 255, 0.1));
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.14), transparent 30%);
-      opacity: 0.9;
-      pointer-events: none;
-    }
-
-    .hero h1 {
-      letter-spacing: -0.02em;
-    }
-
-    /* Improve toggle area sizing and prevent clipping */
-    .soft-toggle {
-      min-width: 110px;
-      justify-content: center;
-      padding-left: 16px;
-      padding-right: 16px;
-    }
-
-    .blurred-divider {
-      height: 1px;
-      margin: 24px 0;
-      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.35), transparent);
-      opacity: 0.35;
-    }
-
-    .animate-pop {
-      animation: pop 260ms ease;
-    }
-
-    @keyframes pop {
-      from {
-        transform: scale(0.95) translateY(6px);
-        opacity: 0;
-      }
-      to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-      }
-    }
-
-    .device-type-pill {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: var(--text-muted);
-      font-size: 0.82rem;
-    }
-
-    .add-button {
+    .glow-btn {
       background: linear-gradient(135deg, #7ce7ff, #8b5cf6);
       border: none;
       color: #041727;
       font-weight: 600;
       box-shadow: 0 12px 35px rgba(124, 231, 255, 0.35);
-      transition: transform 160ms ease, box-shadow 160ms ease;
+      width: 100%;
+      border-radius: 10px;
+      transition: transform 150ms ease, box-shadow 150ms ease;
     }
-
-    .add-button:hover {
-      transform: translateY(-2px);
+    .glow-btn:hover {
+      transform: translateY(-1px);
       box-shadow: 0 16px 45px rgba(139, 92, 246, 0.45);
     }
-
-    .offcanvas {
-      background: var(--bg);
-      color: #e6ecf5;
+    .glow-btn:active {
+      transform: translateY(0);
     }
-
-    .offcanvas-header {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .form-control,
-    .form-select {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      color: #e6ecf5;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-      border-color: rgba(124, 231, 255, 0.65);
-      box-shadow: 0 0 0 0.15rem rgba(124, 231, 255, 0.25);
-    }
-
-    .table-dark th,
-    .table-dark td {
-      color: #dce4f5;
-    }
-
-    /* Activity log styling */
-    .activity-card {
-      border-radius: 18px;
-      overflow: hidden;
-    }
-    .activity-table {
-      margin: 0;
-      background: linear-gradient(120deg, rgba(255, 255, 255, 0.02), rgba(124, 231, 255, 0.03));
-      border-collapse: separate;
-      border-spacing: 0;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-      border-radius: 14px;
-      overflow: hidden;
-    }
-    .activity-table thead th {
-      background: rgba(255, 255, 255, 0.04);
-      color: #e6ecf5;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .activity-table tbody tr + tr td {
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .activity-table td,
-    .activity-table th {
-      padding-top: 12px;
-      padding-bottom: 12px;
-      background: transparent !important;
-    }
-    .badge-soft {
-      border-radius: 999px;
-    }
-    .ghost-button {
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      background: rgba(255, 255, 255, 0.04);
-      color: #dce4f5;
-      padding: 6px 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 150ms ease;
-    }
-    .ghost-button:hover {
-      border-color: rgba(124, 231, 255, 0.6);
-      color: #7ce7ff;
-    }
-
     .lang-toggle {
       position: relative;
       display: inline-flex;
@@ -351,325 +98,94 @@
     .lang-toggle.en .pill {
       transform: translateX(100%);
     }
-
-    .modal-backdrop-custom {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(4px);
-      z-index: 1050;
+    .form-label {
+      font-weight: 600;
+      color: #dfe6f4;
     }
-    .modal-card {
-      position: fixed;
-      z-index: 1060;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 16px;
+    .form-control {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      color: #f4f7ff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease;
     }
-    .modal-panel {
-      background: #0f141d;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
-      max-width: 420px;
-      width: 100%;
-      padding: 18px 18px 14px;
-      color: #e6ecf5;
+    .form-control:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(124, 231, 255, 0.9);
+      box-shadow: 0 0 0 0.15rem rgba(124, 231, 255, 0.25);
+      color: #fff;
     }
-    .modal-panel h5 {
-      margin-bottom: 8px;
+    .form-control::placeholder {
+      color: rgba(230, 236, 245, 0.55);
     }
-    .modal-footer-ghost {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 12px;
+    .input-addon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #b6c2d9;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    .input-wrap {
+      position: relative;
     }
   </style>
 </head>
 <body>
-  <div class="floating-shape" style="top: -60px; left: -40px;"></div>
-  <div class="floating-shape s2" style="bottom: -120px; right: -60px;"></div>
+  <div id="root"></div>
 
-  <div class="container py-4">
-    <div id="root"></div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
   <script type="text/babel">
-    const { useEffect, useMemo, useState, useCallback, useRef } = React;
-
-    // SmartLife-aware client using local Express endpoints. Swap fetch URLs for your proxy if needed.
-    const smartLifeClient = (() => {
-      return {
-        async listDevices() {
-          const res = await fetch("/api/smartlife/devices");
-          if (!res.ok) throw new Error("Geräte laden fehlgeschlagen");
-          return res.json();
-        },
-        async setDeviceState(id, on, deviceName) {
-          const res = await fetch(`/api/smartlife/devices/${id}/state`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ on, deviceName })
-          });
-          if (!res.ok) throw new Error("Schalten fehlgeschlagen");
-          return res.json();
-        },
-        async addDevice(payload) {
-          const res = await fetch(`/api/smartlife/devices`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-          if (!res.ok) throw new Error("Gerät anlegen fehlgeschlagen");
-          return res.json();
-        }
-      };
-    })();
+    const { useEffect, useState, useCallback } = React;
 
     const translations = {
-      de: {
-        hero_kicker: "WeepHub Control",
-        hero_title: "Smart Home, aber fancy.",
-        hero_subtitle: "Verbinde deine SmartLife Steckdosen, sieh Status und schalte sie mit sanften Animationen. Bereit für alle weiteren Geräte.",
-        add_device_btn: "Gerät hinzufügen",
-        drawer_title: "Gerät hinzufügen",
-        drawer_subtitle: "Füge SmartLife oder andere Geräte hinzu.",
-        field_name: "Name",
-        field_room: "Raum",
-        field_type: "Typ",
-        field_brand: "Brand",
-        placeholder_name: "z.B. Wohnzimmer Steckdose",
-        placeholder_room: "Wohnzimmer",
-        type_socket: "Steckdose",
-        type_light: "Licht",
-        type_sensor: "Sensor",
-        unknown_room: "Unbekannt",
-        unknown_device: "Unbekanntes Gerät",
-        error_missing_name: "Name fehlt",
-        error_add: "Fehler beim Hinzufügen",
-        btn_create: "Anlegen",
-        btn_saving: "Speichere...",
-        search_placeholder: "Geräte suchen...",
-        online_only: "Nur Online",
-        status_online: "Online",
-        status_offline: "Offline",
-        toggle_on: "An",
-        toggle_off: "Aus",
-        brand_default: "SmartThings",
-        loading_devices: "Lade SmartThings Geräte...",
-        error_load_devices: "Konnte Geräte nicht laden",
-        error_toggle: "Schalten fehlgeschlagen",
-        devices_empty: "Keine Geräte gefunden.",
-        activity_title: "Letzte Aktionen",
-        activity_subtitle: "Schalten & Online-Status werden live geloggt.",
-        activity_live: "Live",
-        activity_col_device: "Gerät",
-        activity_col_action: "Aktion",
-        activity_col_time: "Zeit",
-        activity_empty: "Noch keine Aktionen.",
-        activity_clear: "Log leeren",
-        activity_clearing: "Leere...",
-        error_clear_log: "Konnte Log nicht löschen",
-        confirm_clear_title: "Log wirklich leeren?",
-        confirm_clear_body: "Alle gespeicherten Einträge werden gelöscht und können nicht wiederhergestellt werden.",
-        confirm_clear_confirm: "Log löschen",
-        confirm_cancel: "Abbrechen",
-        action_on: "Ein",
-        action_off: "Aus",
-        action_online: "Online",
-        action_offline: "Offline",
-        add_device_hint: "Füge SmartLife oder andere Geräte hinzu."
-      },
       en: {
-        hero_kicker: "WeepHub Control",
-        hero_title: "Smart home, but fancy.",
-        hero_subtitle: "Connect your SmartLife sockets, see status, and toggle with smooth animations. Ready for all your other devices.",
-        add_device_btn: "Add device",
-        drawer_title: "Add device",
-        drawer_subtitle: "Add SmartLife or other devices.",
-        field_name: "Name",
-        field_room: "Room",
-        field_type: "Type",
-        field_brand: "Brand",
-        placeholder_name: "e.g. Living room outlet",
-        placeholder_room: "Living room",
-        type_socket: "Outlet",
-        type_light: "Light",
-        type_sensor: "Sensor",
-        unknown_room: "Unknown",
-        unknown_device: "Unknown device",
-        error_missing_name: "Name is missing",
-        error_add: "Failed to add device",
-        btn_create: "Create",
-        btn_saving: "Saving...",
-        search_placeholder: "Search devices...",
-        online_only: "Online only",
-        status_online: "Online",
-        status_offline: "Offline",
-        toggle_on: "On",
-        toggle_off: "Off",
-        brand_default: "SmartThings",
-        loading_devices: "Loading SmartThings devices...",
-        error_load_devices: "Could not load devices",
-        error_toggle: "Toggle failed",
-        devices_empty: "No devices found.",
-        activity_title: "Recent activity",
-        activity_subtitle: "Switches & online status are logged live.",
-        activity_live: "Live",
-        activity_col_device: "Device",
-        activity_col_action: "Action",
-        activity_col_time: "Time",
-        activity_empty: "No actions yet.",
-        activity_clear: "Clear log",
-        activity_clearing: "Clearing...",
-        error_clear_log: "Could not clear log",
-        confirm_clear_title: "Clear log?",
-        confirm_clear_body: "All saved entries will be removed and cannot be restored.",
-        confirm_clear_confirm: "Delete log",
-        confirm_cancel: "Cancel",
-        action_on: "On",
-        action_off: "Off",
-        action_online: "Online",
-        action_offline: "Offline",
-        add_device_hint: "Add SmartLife or other devices."
+        title_setup: "Create your local account",
+        title_login: "Sign in to WeepHub",
+        subtitle_setup: "Secure your dashboard with a local user.",
+        subtitle_login: "Enter your credentials to continue.",
+        username: "Username",
+        password: "Password",
+        create: "Create account",
+        login: "Sign in",
+        created: "Account created! Redirecting…",
+        error: "Something went wrong",
+        missing: "Please fill in all fields",
+        have_account: "Already have an account?",
+        no_account: "No account yet?",
+        loading: "Checking session…",
+        logout: "Sign out",
+        welcome: "Welcome back!",
+        or: "or",
+        continue_dashboard: "Continue"
+      },
+      de: {
+        title_setup: "Lege dein lokales Konto an",
+        title_login: "Bei WeepHub anmelden",
+        subtitle_setup: "Sichere dein Dashboard mit einem lokalen Nutzer.",
+        subtitle_login: "Gib deine Zugangsdaten ein, um fortzufahren.",
+        username: "Benutzername",
+        password: "Passwort",
+        create: "Konto erstellen",
+        login: "Anmelden",
+        created: "Konto erstellt! Weiterleitung…",
+        error: "Etwas ist schiefgelaufen",
+        missing: "Bitte fülle alle Felder aus",
+        have_account: "Bereits ein Konto?",
+        no_account: "Noch kein Konto?",
+        loading: "Prüfe Sitzung…",
+        logout: "Abmelden",
+        welcome: "Willkommen zurück!",
+        or: "oder",
+        continue_dashboard: "Weiter"
       }
     };
 
-    const t = (lang, key) => translations[lang]?.[key] ?? translations.de[key] ?? key;
-
-    const formatRelativeTime = (timestamp, lang) => {
-      const diffSec = Math.round((Date.now() - timestamp) / 1000);
-      if (lang === "en") {
-        if (diffSec < 5) return "just now";
-        if (diffSec < 60) return `${diffSec}s ago`;
-        const diffMin = Math.round(diffSec / 60);
-        if (diffMin < 60) return `${diffMin} min ago`;
-        const diffHours = Math.round(diffMin / 60);
-        if (diffHours < 24) return `${diffHours} h ago`;
-        const diffDays = Math.round(diffHours / 24);
-        return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
-      } else {
-        if (diffSec < 5) return "gerade eben";
-        if (diffSec < 60) return `vor ${diffSec} s`;
-        const diffMin = Math.round(diffSec / 60);
-        if (diffMin < 60) return `vor ${diffMin} Min`;
-        const diffHours = Math.round(diffMin / 60);
-        if (diffHours < 24) return `vor ${diffHours} Std`;
-        const diffDays = Math.round(diffHours / 24);
-        return `vor ${diffDays} Tag${diffDays === 1 ? "" : "en"}`;
-      }
-    };
-
-    const getActionMeta = (action, lang) => {
-      const meta = {
-        on: { label: t(lang, "action_on"), className: "text-success", icon: "bi-power" },
-        off: { label: t(lang, "action_off"), className: "text-danger", icon: "bi-power" },
-        online: { label: t(lang, "action_online"), className: "text-success", icon: "bi-wifi" },
-        offline: { label: t(lang, "action_offline"), className: "text-warning", icon: "bi-wifi-off" }
-      };
-      return meta[action] || { label: action, className: "text-secondary", icon: "bi-dot" };
-    };
-
-    const StatusPill = ({ online, t }) => (
-      <span className="badge rounded-pill badge-soft d-inline-flex align-items-center gap-1">
-        <span className="status-dot" style={{ color: online ? "#53f29c" : "#f25c5c" }}></span>
-        {online ? t("status_online") : t("status_offline")}
-      </span>
-    );
-
-    const DeviceIcon = ({ type }) => {
-      const t = (type || "").toLowerCase();
-      const isPlug = t.includes("steckdose") || t.includes("plug") || t.includes("switch");
-      const isLight = t.includes("licht") || t.includes("light");
-
-      if (isPlug) {
-        return (
-          <div className="device-icon">
-            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="6" y="6" width="52" height="52" rx="12" fill="url(#plugGrad)" stroke="rgba(255,255,255,0.25)" strokeWidth="2"/>
-              <rect x="19" y="19" width="26" height="26" rx="9" fill="#0b1624" stroke="rgba(255,255,255,0.15)" strokeWidth="2"/>
-              <rect x="23" y="23" width="6" height="12" rx="2" fill="#7ce7ff"/>
-              <rect x="35" y="23" width="6" height="12" rx="2" fill="#7ce7ff"/>
-              <rect x="29" y="37" width="6" height="5" rx="2" fill="#f2c94c"/>
-              <defs>
-                <linearGradient id="plugGrad" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#1c2b3f" />
-                  <stop offset="1" stop-color="#2a3951" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        );
-      }
-
-      if (isLight) {
-        return <i className="bi bi-lightbulb fs-5 text-info"></i>;
-      }
-
-      return <i className="bi bi-hdd-network fs-5 text-info"></i>;
-    };
-
-    const DeviceCard = ({ device, onToggle, t }) => {
-      const prettyType = device.type;
-      return (
-        <div className="glass-card p-3 animate-pop">
-          <div className="d-flex align-items-start justify-content-between mb-2">
-            <div className="d-flex align-items-center gap-2">
-              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 46, height: 46, background: "rgba(255,255,255,0.06)" }}>
-                <DeviceIcon type={device.type} />
-              </div>
-              <div>
-                <div className="fw-semibold">{device.name}</div>
-                <div className="device-id">{device.room || device.id}</div>
-              </div>
-            </div>
-            <StatusPill online={device.online} t={t} />
-          </div>
-
-          <div className="d-flex align-items-center justify-content-between mt-3">
-            <div className="d-flex align-items-center gap-2 flex-wrap text-secondary">
-              {prettyType && <span className="device-type-pill">{prettyType}</span>}
-              <span className="device-type-pill">{device.brand || t("brand_default")}</span>
-            </div>
-            <button className="soft-toggle" onClick={() => onToggle(device)} disabled={!device.online}>
-              <div className="status-dot" style={{ color: device.on ? "#7cf29c" : "#f2a15b" }}></div>
-              <span className="fw-semibold">{device.on ? t("toggle_on") : t("toggle_off")}</span>
-              <i className={`bi ${device.on ? "bi-toggle-on" : "bi-toggle-off"} fs-4`}></i>
-            </button>
-          </div>
-        </div>
-      );
-    };
-
-    const ConfirmModal = ({ open, title, body, confirmLabel = "Ja", cancelLabel = "Abbrechen", loadingLabel, onConfirm, onCancel, loading }) => {
-      if (!open) return null;
-      return (
-        <>
-          <div className="modal-backdrop-custom"></div>
-          <div className="modal-card">
-            <div className="modal-panel">
-              <h5 className="fw-semibold mb-1">{title}</h5>
-              <p className="text-secondary mb-0">{body}</p>
-              <div className="modal-footer-ghost">
-                <button className="btn btn-outline-light btn-sm" onClick={onCancel} disabled={loading}>
-                  {cancelLabel}
-                </button>
-                <button className="btn btn-danger btn-sm" onClick={onConfirm} disabled={loading}>
-                  {loading ? loadingLabel || confirmLabel : confirmLabel}
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      );
-    };
+    const t = (lang, key) => translations[lang]?.[key] ?? translations.en[key] ?? key;
 
     const LangToggle = ({ lang, setLang }) => (
       <div className={`lang-toggle ${lang}`}>
@@ -679,147 +195,33 @@
       </div>
     );
 
-    const Hero = ({ t, onAddClick, lang, setLang }) => (
-      <div className="hero mb-4">
-        <div className="row align-items-center">
-          <div className="col-lg-8">
-            <p className="mb-2 text-uppercase text-light small fw-semibold" style={{ letterSpacing: "0.06em" }}>
-              {t("hero_kicker")}
-            </p>
-            <h1 className="display-5 fw-bold mb-3">{t("hero_title")}</h1>
-            <p className="lead mb-0" style={{ maxWidth: "700px", color: "var(--text-muted)" }}>
-              {t("hero_subtitle")}
-            </p>
-          </div>
-          <div className="col-lg-4 text-lg-end mt-3 mt-lg-0 d-flex flex-column align-items-lg-end align-items-start gap-2">
-            <LangToggle lang={lang} setLang={setLang} />
-            <button className="btn add-button px-4 py-2" onClick={onAddClick}>
-              <i className="bi bi-plus-lg me-2"></i>
-              {t("add_device_btn")}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-
-    const AddDeviceDrawer = ({ onAdd, t }) => {
-      const [name, setName] = useState("");
-      const [room, setRoom] = useState("");
-      const [type, setType] = useState(t("type_socket"));
-      const [brand, setBrand] = useState("SmartLife");
-      const [loading, setLoading] = useState(false);
-      const [error, setError] = useState("");
-
-      useEffect(() => {
-        setType((prev) => {
-          if ([translations.de.type_socket, translations.en.type_socket].includes(prev)) return t("type_socket");
-          if ([translations.de.type_light, translations.en.type_light].includes(prev)) return t("type_light");
-          if ([translations.de.type_sensor, translations.en.type_sensor].includes(prev)) return t("type_sensor");
-          return prev;
+    const authClient = (() => ({
+      async status() {
+        const res = await fetch("/api/user/status", { credentials: "include" });
+        if (!res.ok) throw new Error("status failed");
+        return res.json();
+      },
+      async setup(payload) {
+        const res = await fetch("/api/user/setup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          credentials: "include"
         });
-      }, [t]);
-
-      const reset = () => {
-        setName("");
-        setRoom("");
-        setType(t("type_socket"));
-        setBrand("SmartLife");
-        setError("");
-      };
-
-      const handleAdd = async () => {
-        if (!name.trim()) {
-          setError(t("error_missing_name"));
-          return;
-        }
-        setLoading(true);
-        setError("");
-        try {
-          await onAdd({ name: name.trim(), room: room.trim() || t("unknown_room"), type, brand });
-          reset();
-          const drawer = bootstrap.Offcanvas.getInstance("#addDeviceDrawer");
-          drawer?.hide();
-        } catch (e) {
-          setError(e.message || t("error_add"));
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      return (
-        <div className="offcanvas offcanvas-end" tabIndex="-1" id="addDeviceDrawer" aria-labelledby="addDeviceDrawerLabel" style={{ width: "380px" }}>
-          <div className="offcanvas-header">
-            <div>
-              <h5 className="offcanvas-title" id="addDeviceDrawerLabel">{t("drawer_title")}</h5>
-              <p className="mb-0 text-secondary small">{t("drawer_subtitle")}</p>
-            </div>
-            <button type="button" className="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-          </div>
-          <div className="offcanvas-body d-flex flex-column">
-            <div className="mb-3">
-              <label className="form-label">{t("field_name")}</label>
-              <input className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("placeholder_name")} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">{t("field_room")}</label>
-              <input className="form-control" value={room} onChange={(e) => setRoom(e.target.value)} placeholder={t("placeholder_room")} />
-            </div>
-            <div className="row">
-              <div className="col-6 mb-3">
-                <label className="form-label">{t("field_type")}</label>
-                <select className="form-select" value={type} onChange={(e) => setType(e.target.value)}>
-                  <option>{t("type_socket")}</option>
-                  <option>{t("type_light")}</option>
-                  <option>{t("type_sensor")}</option>
-                </select>
-              </div>
-              <div className="col-6 mb-3">
-                <label className="form-label">{t("field_brand")}</label>
-                <input className="form-control" value={brand} onChange={(e) => setBrand(e.target.value)} />
-              </div>
-            </div>
-            {error && <div className="alert alert-danger py-2">{error}</div>}
-            <div className="mt-auto">
-              <button className="btn add-button w-100" onClick={handleAdd} disabled={loading}>
-                {loading ? t("btn_saving") : t("btn_create")}
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    const Filters = ({ search, setSearch, showOnlineOnly, setShowOnlineOnly, t }) => (
-      <div className="glass-card p-3 mb-3">
-        <div className="row g-3 align-items-center">
-          <div className="col-lg-8">
-            <div className="input-group">
-              <span className="input-group-text bg-transparent text-secondary border-0">
-                <i className="bi bi-search"></i>
-              </span>
-              <input
-                className="form-control border-0 bg-transparent text-light"
-                placeholder={t("search_placeholder")}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="col-lg-4 text-lg-end">
-            <div className="form-check form-switch d-inline-flex align-items-center gap-2">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="onlineOnly"
-                checked={showOnlineOnly}
-                onChange={(e) => setShowOnlineOnly(e.target.checked)}
-              />
-              <label className="form-check-label text-secondary" htmlFor="onlineOnly">{t("online_only")}</label>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "setup failed");
+        return res.json();
+      },
+      async login(payload) {
+        const res = await fetch("/api/user/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          credentials: "include"
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "login failed");
+        return res.json();
+      }
+    }))();
 
     const App = () => {
       const getInitialLang = () => {
@@ -829,281 +231,116 @@
       };
 
       const [lang, setLang] = useState(getInitialLang);
-      const translate = useCallback((key) => t(lang, key), [lang]);
-      const [devices, setDevices] = useState([]);
+      const [hasUser, setHasUser] = useState(false);
+      const [authenticated, setAuthenticated] = useState(false);
+      const [username, setUsername] = useState("");
+      const [password, setPassword] = useState("");
       const [loading, setLoading] = useState(true);
-      const [error, setError] = useState("");
-      const [search, setSearch] = useState("");
-      const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-      const [activity, setActivity] = useState([]);
-      const devicesRef = useRef([]);
-      const activityRef = useRef([]);
-      const [clearing, setClearing] = useState(false);
-      const [showConfirm, setShowConfirm] = useState(false);
-
-      useEffect(() => {
-        devicesRef.current = devices;
-      }, [devices]);
-
-      useEffect(() => {
-        activityRef.current = activity;
-      }, [activity]);
-
-      const persistLog = useCallback(async (entry) => {
-        try {
-          await fetch("/api/logs", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(entry)
-          });
-        } catch (e) {
-          // Silent fail; UI hat schon lokale Kopie.
-        }
-      }, []);
-
-      const performClear = useCallback(async () => {
-        if (clearing) return;
-        setClearing(true);
-        try {
-          const res = await fetch("/api/logs", { method: "DELETE" });
-          if (!res.ok) throw new Error("Konnte Log nicht löschen");
-          setActivity([]);
-        } catch (e) {
-          setError(e.message || translate("error_clear_log"));
-        } finally {
-          setClearing(false);
-          setShowConfirm(false);
-        }
-      }, [clearing, translate]);
-
-      const addLogEntry = useCallback(
-        (entry, { persist = false } = {}) => {
-          const item = {
-            id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-            timestamp: Date.now(),
-            ...entry
-          };
-          setActivity((prev) => [item, ...prev].slice(0, 120));
-          if (persist) {
-            persistLog({ device: item.device, action: item.action, timestamp: item.timestamp });
-          }
-        },
-        [persistLog]
-      );
-
-      const loadLogs = useCallback(async () => {
-        try {
-          const res = await fetch("/api/logs");
-          if (!res.ok) throw new Error("Konnte Logs nicht laden");
-          const logs = await res.json();
-          const mapped = (logs || []).map((log, idx) => ({
-            id: `${log.timestamp || idx}-${idx}`,
-            device: log.device || "",
-            action: log.action || "unknown",
-            timestamp: log.timestamp || Date.now()
-          }));
-          setActivity(mapped);
-        } catch (_) {
-          // ignore, UI kann weiterarbeiten
-        }
-      }, []);
-
-      const openAddDrawer = useCallback(() => {
-        const drawer = bootstrap.Offcanvas.getOrCreateInstance("#addDeviceDrawer");
-        drawer?.show();
-      }, []);
-
-      const detectOnlineChanges = useCallback(
-        (prevList, nextList) => {
-          const prevMap = new Map(prevList.map((d) => [d.id, d]));
-          nextList.forEach((device) => {
-            const prev = prevMap.get(device.id);
-            if (!prev) return;
-            if (prev.online !== device.online) {
-              addLogEntry(
-                {
-                  device: device.name,
-                  action: device.online ? "online" : "offline"
-                },
-                { persist: true }
-              );
-            }
-          });
-        },
-        [addLogEntry]
-      );
-
-      const loadDevices = useCallback(
-        async ({ withDiff = false, silent = false } = {}) => {
-          if (!silent) {
-            setLoading(true);
-            setError("");
-          }
-          try {
-            const list = await smartLifeClient.listDevices();
-            if (withDiff) {
-              detectOnlineChanges(devicesRef.current, list);
-            }
-            setDevices(list);
-          } catch (e) {
-            if (!silent) {
-              setError(e.message || "Konnte Geräte nicht laden");
-            }
-          } finally {
-            if (!silent) {
-              setLoading(false);
-            }
-          }
-        },
-        [detectOnlineChanges]
-      );
-
-      useEffect(() => {
-        loadDevices();
-        loadLogs();
-      }, [loadDevices, loadLogs]);
+      const [working, setWorking] = useState(false);
+      const [message, setMessage] = useState("");
 
       useEffect(() => {
         document.cookie = `lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
       }, [lang]);
 
-      useEffect(() => {
-        const interval = setInterval(() => {
-          loadDevices({ withDiff: true, silent: true });
-        }, 20000);
-        return () => clearInterval(interval);
-      }, [loadDevices]);
-
-      const filtered = useMemo(() => {
-        return devices.filter((d) => {
-          const matchesSearch = d.name.toLowerCase().includes(search.toLowerCase()) || (d.room || "").toLowerCase().includes(search.toLowerCase());
-          const matchesOnline = showOnlineOnly ? d.online : true;
-          return matchesSearch && matchesOnline;
-        });
-      }, [devices, search, showOnlineOnly]);
-
-      const handleToggle = async (device) => {
-        const nextValue = !device.on;
-        setDevices((prev) => prev.map((d) => (d.id === device.id ? { ...d, on: nextValue } : d)));
+      const loadStatus = useCallback(async () => {
         try {
-          const result = await smartLifeClient.setDeviceState(device.id, nextValue, device.name);
-          const liveState = result.state || {};
-          const finalOn = typeof liveState.on === "boolean" ? liveState.on : nextValue;
-          const finalOnline = typeof liveState.online === "boolean" ? liveState.online : device.online;
-          setDevices((prev) =>
-            prev.map((d) => (d.id === device.id ? { ...d, on: finalOn, online: finalOnline } : d))
-          );
-          addLogEntry(
-            {
-              device: device.name,
-              action: finalOn ? "on" : "off"
-            },
-            { persist: true }
-          );
+          setLoading(true);
+          const status = await authClient.status();
+          setHasUser(status.hasUser);
+          if (status.authenticated) {
+            window.location.href = "/dashboard";
+            return;
+          }
+        } catch (_) {
+          // ignore
+        } finally {
+          setLoading(false);
+        }
+      }, []);
+
+      useEffect(() => {
+        loadStatus();
+      }, [loadStatus]);
+
+      const handleSubmit = async () => {
+        if (!username.trim() || !password.trim()) {
+          setMessage(t(lang, "missing"));
+          return;
+        }
+        setWorking(true);
+        setMessage("");
+        try {
+          if (!hasUser) {
+            await authClient.setup({ username: username.trim(), password });
+            setMessage(t(lang, "created"));
+          } else {
+            await authClient.login({ username: username.trim(), password });
+          }
+          window.location.href = "/dashboard";
         } catch (e) {
-          setError(e.message || translate("error_toggle"));
-          setDevices((prev) => prev.map((d) => (d.id === device.id ? { ...d, on: device.on } : d)));
+          setMessage(e.message || t(lang, "error"));
+        } finally {
+          setWorking(false);
         }
       };
 
-      const handleAdd = async (payload) => {
-        const created = await smartLifeClient.addDevice(payload);
-        setDevices((prev) => [...prev, created]);
-      };
+      if (loading) {
+        return (
+          <div className="card-soft text-center">
+            <div className="mb-2">
+              <LangToggle lang={lang} setLang={setLang} />
+            </div>
+            <div>{t(lang, "loading")}</div>
+          </div>
+        );
+      }
 
       return (
-        <div className="mb-5">
-          <Hero t={translate} onAddClick={openAddDrawer} lang={lang} setLang={setLang} />
-          <Filters
-            search={search}
-            setSearch={setSearch}
-            showOnlineOnly={showOnlineOnly}
-            setShowOnlineOnly={setShowOnlineOnly}
-            t={translate}
-          />
-
-          {error && (
-            <div className="alert alert-danger d-flex align-items-center gap-2 glass-card border-0">
-              <i className="bi bi-exclamation-triangle-fill"></i>
-              <span>{error}</span>
+        <div className="card-soft">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <div className="brand fs-4">WeepHub</div>
+              <div className="text-secondary small">Local & private</div>
             </div>
-          )}
+            <LangToggle lang={lang} setLang={setLang} />
+          </div>
+          <h5 className="fw-semibold mb-1">{hasUser ? t(lang, "title_login") : t(lang, "title_setup")}</h5>
+          <p className="text-secondary mb-3">{hasUser ? t(lang, "subtitle_login") : t(lang, "subtitle_setup")}</p>
 
-          {loading ? (
-            <div className="text-center py-5 text-secondary">{translate("loading_devices")}</div>
-          ) : (
-            <>
-              <div className="grid">
-                {filtered.map((device) => (
-                  <DeviceCard key={device.id} device={device} onToggle={handleToggle} t={translate} />
-                ))}
-              </div>
-              {filtered.length === 0 && <div className="text-center text-secondary py-4">{translate("devices_empty")}</div>}
-            </>
-          )}
-
-          <div className="blurred-divider"></div>
-
-          <div className="glass-card p-3 activity-card">
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <div>
-                <div className="fw-semibold">{translate("activity_title")}</div>
-                <div className="text-secondary small">{translate("activity_subtitle")}</div>
-              </div>
-              <div className="d-flex align-items-center gap-2">
-                <button className="ghost-button btn btn-sm" onClick={() => setShowConfirm(true)} disabled={clearing}>
-                  <i className="bi bi-trash3"></i>
-                  {clearing ? translate("activity_clearing") : translate("activity_clear")}
-                </button>
-                <span className="badge-soft badge rounded-pill">{translate("activity_live")}</span>
-              </div>
+          <div className="mb-3">
+            <label className="form-label">{t(lang, "username")}</label>
+            <div className="input-wrap">
+              <input
+                className="form-control"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                placeholder={t(lang, "username")}
+              />
+              <i className="bi bi-person input-addon"></i>
             </div>
-            <div className="table-responsive rounded-4">
-              <table className="table table-dark table-sm align-middle mb-0 activity-table">
-                <thead>
-                  <tr>
-                    <th>{translate("activity_col_device")}</th>
-                    <th>{translate("activity_col_action")}</th>
-                    <th>{translate("activity_col_time")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activity.length === 0 ? (
-                    <tr>
-                      <td colSpan="3" className="text-center text-secondary">{translate("activity_empty")}</td>
-                    </tr>
-                  ) : (
-                    activity.map((log) => {
-                      const meta = getActionMeta(log.action, lang);
-                      return (
-                        <tr key={log.id}>
-                          <td>{log.device || translate("unknown_device")}</td>
-                          <td className={meta.className}>
-                            <i className={`bi ${meta.icon} me-1`}></i>
-                            {meta.label}
-                          </td>
-                          <td>{formatRelativeTime(log.timestamp, lang)}</td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">{t(lang, "password")}</label>
+            <div className="input-wrap">
+              <input
+                className="form-control"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                placeholder={t(lang, "password")}
+              />
+              <i className="bi bi-shield-lock input-addon"></i>
             </div>
           </div>
 
-          <AddDeviceDrawer onAdd={handleAdd} t={translate} />
-          <ConfirmModal
-            open={showConfirm}
-            title={translate("confirm_clear_title")}
-            body={translate("confirm_clear_body")}
-            confirmLabel={translate("confirm_clear_confirm")}
-            cancelLabel={translate("confirm_cancel")}
-            loadingLabel={translate("activity_clearing")}
-            onConfirm={performClear}
-            onCancel={() => setShowConfirm(false)}
-            loading={clearing}
-          />
+          <button className="btn glow-btn" onClick={handleSubmit} disabled={working}>
+            {working ? t(lang, "loading") : hasUser ? t(lang, "login") : t(lang, "create")}
+          </button>
+
+          {message && <div className="mt-2 text-info small">{message}</div>}
         </div>
       );
     };
