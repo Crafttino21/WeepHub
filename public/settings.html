@@ -187,6 +187,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="/time-overlay.js"></script>
   <script type="text/babel">
     const { useEffect, useState, useCallback } = React;
 
@@ -201,6 +202,8 @@
         theme_default: "Default",
         polling: "Device polling (sec)",
         online_only: "Online filter default",
+        routine_interval: "Routine check interval (sec)",
+        routine_hint: "How often the scheduler checks time-based routines (min 5s, max 300s).",
         save: "Save",
         saving: "Saving...",
         saved: "Saved.",
@@ -212,6 +215,8 @@
         debug_verbose: "Verbose logs",
         debug_console: "In-app console",
         console_hint: "Show client errors in an overlay",
+        server_time: "Server time overlay",
+        server_time_hint: "Shows server time (with seconds) in the corner on all pages",
         account: "Account",
         username: "Username",
         password: "Password",
@@ -229,6 +234,8 @@
         theme_default: "Standard",
         polling: "Polling-Intervall (Sek.)",
         online_only: "Online-Filter standardmäßig",
+        routine_interval: "Routine-Check Intervall (Sek.)",
+        routine_hint: "Wie oft der Scheduler zeitbasierte Routinen prüft (min 5s, max 300s).",
         save: "Speichern",
         saving: "Speichere...",
         saved: "Gespeichert.",
@@ -240,6 +247,8 @@
         debug_verbose: "Verbose Logs",
         debug_console: "In-App Konsole",
         console_hint: "Zeigt Client-Fehler als Overlay",
+        server_time: "Serverzeit anzeigen",
+        server_time_hint: "Zeigt die Serverzeit (mit Sekunden) als Overlay auf allen Seiten",
         account: "Account",
         username: "Benutzername",
         password: "Passwort",
@@ -297,12 +306,14 @@
       const [lang, setLang] = useState(getInitialLang);
       const [onlineOnly, setOnlineOnly] = useState(false);
       const [polling, setPolling] = useState(20);
+      const [routineIntervalSec, setRoutineIntervalSec] = useState(30);
       const [saving, setSaving] = useState(false);
       const [msg, setMsg] = useState("");
       const [debug, setDebug] = useState({
         useEnvToken: false,
         verboseLog: false,
-        consoleOverlay: false
+        consoleOverlay: false,
+        serverTimeOverlay: false
       });
       const [accountName, setAccountName] = useState("");
       const [accountPass, setAccountPass] = useState("");
@@ -328,6 +339,21 @@
       }, [ensureAuth]);
 
       useEffect(() => {
+        // Load server settings (scheduler interval)
+        const loadServerSettings = async () => {
+          try {
+            const res = await fetch("/api/settings", { credentials: "include" });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (Number.isFinite(data.routineCheckIntervalMs)) {
+              setRoutineIntervalSec(Math.max(5, Math.min(300, Math.round(data.routineCheckIntervalMs / 1000))));
+            }
+          } catch (_) {}
+        };
+        loadServerSettings();
+      }, []);
+
+      useEffect(() => {
         const stored = localStorage.getItem("settings");
         if (stored) {
           try {
@@ -339,7 +365,8 @@
               setDebug({
                 useEnvToken: Boolean(parsed.debug.useEnvToken),
                 verboseLog: Boolean(parsed.debug.verboseLog),
-                consoleOverlay: Boolean(parsed.debug.consoleOverlay)
+                consoleOverlay: Boolean(parsed.debug.consoleOverlay),
+                serverTimeOverlay: Boolean(parsed.debug.serverTimeOverlay)
               });
             }
           } catch (_) {}
@@ -350,15 +377,30 @@
         document.cookie = `lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
       }, [lang]);
 
-      const handleSave = () => {
+      const handleSave = async () => {
         setSaving(true);
         setMsg("");
         const next = { onlineOnly, polling: Number(polling) || 20, lang, debug };
         localStorage.setItem("settings", JSON.stringify(next));
-        setTimeout(() => {
-          setSaving(false);
+
+        try {
+          const body = { routineCheckIntervalMs: Math.max(5, Math.min(300, routineIntervalSec)) * 1000 };
+          const res = await fetch("/api/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(body)
+          });
+          if (!res.ok) {
+            const err = (await res.json().catch(() => ({}))).error;
+            throw new Error(err || "Save failed");
+          }
           setMsg(t(lang, "saved"));
-        }, 300);
+        } catch (e) {
+          setMsg(e.message || "Save failed");
+        } finally {
+          setSaving(false);
+        }
       };
 
       const handleAccountSave = async () => {
@@ -450,6 +492,21 @@
                 onChange={(e) => setPolling(parseInt(e.target.value, 10) || 20)}
               />
             </div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "routine_interval")}</div>
+                <div className="muted small">{t(lang, "routine_hint")}</div>
+              </div>
+              <input
+                type="number"
+                className="form-control"
+                style={{ width: "140px" }}
+                value={routineIntervalSec}
+                min="5"
+                max="300"
+                onChange={(e) => setRoutineIntervalSec(Math.max(5, Math.min(300, parseInt(e.target.value, 10) || 30)))}
+              />
+            </div>
             <div className="divider"></div>
             <div className="fw-semibold mt-1">{t(lang, "advanced")}</div>
             <div className="toggle-row">
@@ -491,6 +548,20 @@
                   type="checkbox"
                   checked={debug.consoleOverlay}
                   onChange={(e) => setDebug((d) => ({ ...d, consoleOverlay: e.target.checked }))}
+                />
+              </div>
+            </div>
+            <div className="toggle-row">
+              <div>
+                <div className="fw-semibold">{t(lang, "server_time")}</div>
+                <div className="muted small">{t(lang, "server_time_hint")}</div>
+              </div>
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={debug.serverTimeOverlay}
+                  onChange={(e) => setDebug((d) => ({ ...d, serverTimeOverlay: e.target.checked }))}
                 />
               </div>
             </div>

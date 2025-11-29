@@ -557,6 +557,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="/time-overlay.js"></script>
 
   <script type="text/babel">
     const { useEffect, useMemo, useState, useCallback, useRef } = React;
@@ -694,6 +695,7 @@
         hero_welcome: "Willkommen zurück,",
         api_management: "API Management",
         settings: "Einstellungen",
+        routines: "Routinen",
         action_on: "Ein",
         action_off: "Aus",
         action_online: "Online",
@@ -762,6 +764,7 @@
         hero_welcome: "Welcome back,",
         api_management: "API Management",
         settings: "Settings",
+        routines: "Routines",
         action_on: "On",
         action_off: "Off",
         action_online: "Online",
@@ -939,6 +942,10 @@
             <a className="dropdown-item-ghost" href="/settings">
               <i className="bi bi-sliders"></i>
               {t("settings")}
+            </a>
+            <a className="dropdown-item-ghost" href="/routines">
+              <i className="bi bi-braces"></i>
+              {t("routines")}
             </a>
             <button className="dropdown-item-ghost" onClick={onLogout}>
               <i className="bi bi-box-arrow-right"></i>

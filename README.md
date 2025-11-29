@@ -22,6 +22,7 @@ Self-hosted, privacy-first smart home control hub for Raspberry Pi and local ser
 - SmartThings devices load, report status (on/off + health), and toggle from the dashboard (multiple PATs aggregated).
 - Encrypted storage for integration tokens in `data/integrations.json` with local AES key (`data/secret.key`).
 - Live activity log (toggle + online/offline) persisted to `logs/activity.log` with UI table and clear action.
+- Zeitbasierte Routinen mit Mehrfach-Aktionen: Schalten, Dimmen, Temperatur setzen oder Custom SmartThings-Kommandos, ausgeführt vom lokalen Scheduler.
 - Static frontend served from `/public` (login `index.html`, dashboard `dashboard.html`, API management `api.html`).
 - Runs on `localhost:3001` with `.env` configuration or saved tokens.
 
@@ -52,11 +53,13 @@ WeepHub/
 │  ├─ index.html        # Login/Signup (React, i18n)
 │  ├─ dashboard.html    # Dashboard (devices, logs, i18n)
 │  ├─ api.html          # API Management (integrations, tokens, i18n)
-│  └─ settings.html     # Settings (UI prefs, language, polling)
+│  ├─ settings.html     # Settings (UI prefs, language, polling)
+│  └─ routines.html     # Routinen-Editor (zeitbasierte Automationen)
 ├─ data/                # Local auth/tokens (ignored by git)
 │  ├─ user.json         # Local user (hashed)
 │  ├─ secret.key        # Local AES key for integrations
-│  └─ integrations.json # Encrypted integration entries
+│  ├─ integrations.json # Encrypted integration entries
+│  └─ routines.json     # Routinen (zeitbasierte Automationen)
 ├─ logs/activity.log    # Persisted activity log
 ├─ .env.example         # Sample environment variables
 └─ .env                 # Local secrets (not committed)

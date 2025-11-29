@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeepHub Routinen</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.16);
+      --accent: #7ce7ff;
+      --accent-2: #8b5cf6;
+      --text-muted: #b6c2d9;
+    }
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 20%, rgba(124, 231, 255, 0.12), transparent 25%),
+        radial-gradient(circle at 80% 0%, rgba(139, 92, 246, 0.25), transparent 30%),
+        radial-gradient(circle at 60% 70%, rgba(124, 231, 255, 0.18), transparent 25%),
+        var(--bg);
+      color: #e6ecf5;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+    }
+    .glass-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+      padding: 18px;
+    }
+    .hero {
+      padding: 28px 24px;
+      border-radius: 20px;
+      background: linear-gradient(120deg, rgba(124, 231, 255, 0.12), rgba(139, 92, 246, 0.08), rgba(124, 231, 255, 0.1));
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.12), transparent 30%);
+      pointer-events: none;
+    }
+    .block-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .block {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .block-label {
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .routine-card {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 14px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(124, 231, 255, 0.04));
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.05);
+      color: #dfe6f4;
+      font-size: 0.9rem;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #53f29c;
+      box-shadow: 0 0 10px #53f29c;
+    }
+    .status-dot.off {
+      background: #f25c5c;
+      box-shadow: 0 0 10px #f25c5c;
+    }
+    .lang-toggle {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      overflow: hidden;
+      min-width: 118px;
+      height: 38px;
+    }
+    .lang-toggle button {
+      position: relative;
+      z-index: 1;
+      border: none;
+      background: transparent;
+      color: #b6c2d9;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      transition: all 150ms ease;
+      width: 50%;
+    }
+    .lang-toggle button.active {
+      color: #041727;
+    }
+    .lang-toggle .pill-indicator {
+      position: absolute;
+      inset: 4px;
+      width: calc(50% - 4px);
+      background: linear-gradient(135deg, #7ce7ff, #8b5cf6);
+      border-radius: 999px;
+      box-shadow: 0 10px 24px rgba(124, 231, 255, 0.35);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .lang-toggle.en .pill-indicator {
+      transform: translateX(100%);
+    }
+    .add-button {
+      background: linear-gradient(135deg, #7ce7ff, #8b5cf6);
+      border: none;
+      color: #041727;
+      font-weight: 600;
+      box-shadow: 0 12px 35px rgba(124, 231, 255, 0.35);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+    .add-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 45px rgba(139, 92, 246, 0.45);
+    }
+    .ghost-button {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.04);
+      color: #dce4f5;
+      padding: 6px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 150ms ease;
+    }
+    .ghost-button:hover {
+      border-color: rgba(124, 231, 255, 0.6);
+      color: #7ce7ff;
+    }
+    .add-action-btn {
+      border-radius: 12px;
+      border: 1px solid rgba(124, 231, 255, 0.35);
+      background: linear-gradient(135deg, rgba(124, 231, 255, 0.12), rgba(139, 92, 246, 0.12));
+      color: #dce4f5;
+      padding: 8px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 140ms ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 24px rgba(124, 231, 255, 0.15);
+    }
+    .add-action-btn:hover {
+      border-color: rgba(124, 231, 255, 0.65);
+      color: #7ce7ff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 10px 28px rgba(139, 92, 246, 0.25);
+      transform: translateY(-1px);
+    }
+    .add-action-btn:active {
+      transform: translateY(0);
+    }
+    .form-control,
+    .form-select {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #e6ecf5;
+    }
+    .form-control:focus,
+    .form-select:focus {
+      border-color: rgba(124, 231, 255, 0.65);
+      box-shadow: 0 0 0 0.15rem rgba(124, 231, 255, 0.25);
+    }
+    /* shadcn-inspired select */
+    .menu-select {
+      position: relative;
+      min-width: 180px;
+    }
+    .menu-trigger {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.05);
+      color: #e6ecf5;
+      padding: 10px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease, transform 120ms ease;
+    }
+    .menu-trigger:hover {
+      border-color: rgba(124, 231, 255, 0.45);
+      background: rgba(255, 255, 255, 0.07);
+    }
+    .menu-trigger.open {
+      border-color: rgba(124, 231, 255, 0.9);
+      box-shadow: 0 0 0 0.15rem rgba(124, 231, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-1px);
+    }
+    .menu-list {
+      position: absolute;
+      margin-top: 6px;
+      inset: auto 0 auto auto;
+      background: rgba(8, 10, 14, 0.95);
+      border: 1px solid rgba(124, 231, 255, 0.25);
+      border-radius: 12px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(6px);
+      overflow: hidden;
+      z-index: 40;
+      min-width: 100%;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .menu-item {
+      padding: 10px 12px;
+      color: #e6ecf5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 120ms ease;
+    }
+    .menu-item:hover,
+    .menu-item.active {
+      background: rgba(124, 231, 255, 0.08);
+    }
+    .menu-item small {
+      color: #8ea4c5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div id="root"></div>
+  </div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="/time-overlay.js"></script>
+
+  <script type="text/babel">
+    const { useEffect, useState, useCallback, useMemo } = React;
+    const genId = () => (crypto?.randomUUID ? crypto.randomUUID() : `a-${Math.random().toString(16).slice(2)}`);
+
+    const translations = {
+      de: {
+        title: "Routinen",
+        subtitle: "Baue zeitbasierte Automationen als Baukasten: Wenn Uhrzeit erreicht ist, schalte Geräte.",
+        back_dashboard: "Zurück zum Dashboard",
+        builder_title: "Routine zusammenklicken",
+        builder_sub: "Blocks: Wenn <Uhrzeit> ist, dann führe mehrere Aktionen aus.",
+        name_label: "Name",
+        time_label: "Uhrzeit",
+        trigger_type: "Auslöser",
+        trigger_type_time: "Uhrzeit (täglich oder Wochentage)",
+        trigger_type_interval: "Alle X Minuten",
+        trigger_days: "Wochentage",
+        trigger_interval_minutes: "Intervall (Minuten)",
+        day_0: "So",
+        day_1: "Mo",
+        day_2: "Di",
+        day_3: "Mi",
+        day_4: "Do",
+        day_5: "Fr",
+        day_6: "Sa",
+        device_label: "Gerät",
+        action_label: "Aktion",
+        action_on: "An",
+        action_off: "Aus",
+        action_level: "Helligkeit setzen",
+        action_temp: "Soll-Temperatur setzen",
+        action_custom: "Custom Capability",
+        device_placeholder: "Gerät auswählen",
+        btn_create: "Routine erstellen",
+        creating: "Speichere...",
+        add_action: "Aktion hinzufügen",
+        list_title: "Geplante Routinen",
+        empty: "Noch keine Routinen angelegt.",
+        loading: "Lade Routinen...",
+        enable: "Aktivieren",
+        disable: "Deaktivieren",
+        enabled_state: "Aktiviert",
+        disabled_state: "Deaktiviert",
+        run_now: "Jetzt ausführen",
+        delete: "Löschen",
+        last_run: "Zuletzt ausgeführt",
+        never: "Noch nie",
+        error_load: "Konnte Routinen nicht laden",
+        error_save: "Konnte Routine nicht speichern",
+        error_delete: "Konnte Routine nicht löschen",
+        error_run: "Konnte Routine nicht ausführen",
+        validation: "Bitte Name, Uhrzeit und Gerät auswählen.",
+        device_missing: "Gerät nicht mehr vorhanden",
+        preview_prefix: "Wenn",
+        preview_then: "dann",
+        schedule_hint: "Läuft täglich um die gewählte Uhrzeit."
+      },
+      en: {
+        title: "Routines",
+        subtitle: "Build time-based automations as blocks: when a time is reached, toggle devices.",
+        back_dashboard: "Back to dashboard",
+        builder_title: "Assemble a routine",
+        builder_sub: "Blocks: When <time> is met, run multiple actions.",
+        name_label: "Name",
+        time_label: "Time",
+        trigger_type: "Trigger",
+        trigger_type_time: "Time (daily or weekdays)",
+        trigger_type_interval: "Every X minutes",
+        trigger_days: "Weekdays",
+        trigger_interval_minutes: "Interval (minutes)",
+        day_0: "Sun",
+        day_1: "Mon",
+        day_2: "Tue",
+        day_3: "Wed",
+        day_4: "Thu",
+        day_5: "Fri",
+        day_6: "Sat",
+        device_label: "Device",
+        action_label: "Action",
+        action_on: "On",
+        action_off: "Off",
+        action_level: "Set brightness",
+        action_temp: "Set temperature",
+        action_custom: "Custom capability",
+        device_placeholder: "Choose device",
+        btn_create: "Create routine",
+        creating: "Saving...",
+        add_action: "Add action",
+        list_title: "Scheduled routines",
+        empty: "No routines yet.",
+        loading: "Loading routines...",
+        enable: "Enable",
+        disable: "Disable",
+        enabled_state: "Enabled",
+        disabled_state: "Disabled",
+        run_now: "Run now",
+        delete: "Delete",
+        last_run: "Last run",
+        never: "Never",
+        error_load: "Could not load routines",
+        error_save: "Could not save routine",
+        error_delete: "Could not delete routine",
+        error_run: "Could not run routine",
+        validation: "Please provide name, time and device.",
+        device_missing: "Device missing",
+        preview_prefix: "When",
+        preview_then: "then",
+        schedule_hint: "Runs daily at the selected time."
+      }
+    };
+
+    const t = (lang, key) => translations[lang]?.[key] ?? translations.de[key] ?? key;
+
+    const authClient = (() => ({
+      async status() {
+        const res = await fetch("/api/user/status", { credentials: "include" });
+        if (!res.ok) throw new Error("Auth fehlgeschlagen");
+        return res.json();
+      },
+      async logout() {
+        const res = await fetch("/api/user/logout", { method: "POST", credentials: "include" });
+        if (!res.ok) throw new Error("Logout fehlgeschlagen");
+        return res.json();
+      }
+    }))();
+
+    const routineClient = (() => ({
+      async list() {
+        const res = await fetch("/api/routines", { credentials: "include" });
+        if (!res.ok) throw new Error("load failed");
+        return res.json();
+      },
+      async create(payload) {
+        const res = await fetch("/api/routines", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "save failed");
+        return res.json();
+      },
+      async update(id, payload) {
+        const res = await fetch(`/api/routines/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "update failed");
+        return res.json();
+      },
+      async remove(id) {
+        const res = await fetch(`/api/routines/${id}`, { method: "DELETE", credentials: "include" });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "delete failed");
+        return res.json();
+      },
+      async run(id) {
+        const res = await fetch(`/api/routines/${id}/run`, { method: "POST", credentials: "include" });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "run failed");
+        return res.json();
+      }
+    }))();
+
+    const smartLifeClient = (() => ({
+      async listDevices() {
+        const res = await fetch("/api/smartlife/devices");
+        if (!res.ok) throw new Error("Geräte laden fehlgeschlagen");
+        return res.json();
+      }
+    }))();
+
+    const LangToggle = ({ lang, setLang }) => (
+      <div className={`lang-toggle ${lang}`}>
+        <span className="pill-indicator" aria-hidden="true"></span>
+        <button className={lang === "de" ? "active" : ""} onClick={() => setLang("de")}>DE</button>
+        <button className={lang === "en" ? "active" : ""} onClick={() => setLang("en")}>EN</button>
+      </div>
+    );
+
+    const MenuSelect = ({ options, value, onChange, placeholder = "Select", renderLabel }) => {
+      const [open, setOpen] = useState(false);
+      useEffect(() => {
+        const handler = (e) => {
+          if (!e.target.closest(".menu-select")) setOpen(false);
+        };
+        document.addEventListener("click", handler);
+        return () => document.removeEventListener("click", handler);
+      }, []);
+      const current = options.find((o) => o.value === value);
+      const label = current ? (renderLabel ? renderLabel(current) : current.label) : placeholder;
+      return (
+        <div className="menu-select">
+          <button type="button" className={`menu-trigger ${open ? "open" : ""}`} onClick={() => setOpen((p) => !p)}>
+            <span>{label}</span>
+            <i className="bi bi-chevron-down"></i>
+          </button>
+          {open && (
+            <div className="menu-list">
+              {options.map((opt) => (
+                <div
+                  key={opt.value}
+                  className={`menu-item ${opt.value === value ? "active" : ""}`}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setOpen(false);
+                  }}
+                >
+                  <span>{renderLabel ? renderLabel(opt) : opt.label}</span>
+                  {opt.hint && <small>{opt.hint}</small>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const RoutineCard = ({ routine, lang, deviceLookup, onToggle, onRun, onDelete }) => {
+      const actionSummary = (action) => {
+        const device = deviceLookup[action.deviceId];
+        const name = action.deviceName || device?.name || t(lang, "device_missing");
+        if (action.type === "device_toggle") {
+          return `${name} • ${action.desiredState ? t(lang, "action_on") : t(lang, "action_off")}`;
+        }
+        if (action.type === "device_command") {
+          const args = Array.isArray(action.arguments) && action.arguments.length ? ` (${action.arguments.join(",")})` : "";
+          return `${name} • ${action.capability}.${action.command}${args}`;
+        }
+        return `${name}`;
+      };
+
+      const triggerLabel = () => {
+        if (routine.trigger?.type === "interval") {
+          return `${t(lang, "preview_prefix")} alle ${routine.trigger.everyMinutes} min`;
+        }
+        const dayLabel = Array.isArray(routine.trigger?.days) && routine.trigger.days.length
+          ? ` (${routine.trigger.days.map((d) => t(lang, `day_${d}`)).join(",")})`
+          : "";
+        return `${t(lang, "preview_prefix")} ${routine.trigger?.time || ""}${dayLabel}`;
+      };
+
+      return (
+        <div className="routine-card mb-3">
+          <div className="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+            <div>
+              <div className="d-flex align-items-center gap-2 mb-1">
+                <div className="fw-semibold fs-5">{routine.name}</div>
+                <span className="pill">
+                  <span className={`status-dot ${routine.enabled ? "" : "off"}`} aria-hidden="true"></span>
+                  {routine.enabled ? t(lang, "enabled_state") : t(lang, "disabled_state")}
+                </span>
+              </div>
+              <div className="text-secondary small">{t(lang, "schedule_hint")}</div>
+            </div>
+            <div className="d-flex gap-2">
+              <button className="ghost-button btn btn-sm" onClick={() => onRun(routine.id)}>
+                <i className="bi bi-play-fill"></i>
+                {t(lang, "run_now")}
+              </button>
+              <button className="ghost-button btn btn-sm" onClick={() => onToggle(routine)}>
+                <i className="bi bi-power"></i>
+                {routine.enabled ? t(lang, "disable") : t(lang, "enable")}
+              </button>
+              <button className="btn btn-danger btn-sm" onClick={() => onDelete(routine.id)}>
+                <i className="bi bi-trash"></i>
+                {t(lang, "delete")}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-3 d-flex flex-wrap align-items-center gap-2">
+            <span className="pill">
+              <i className="bi bi-clock-history"></i>
+              {triggerLabel()}
+            </span>
+            {routine.actions?.map((a) => (
+              <span className="pill" key={a.id}>
+                {t(lang, "preview_then")} <i className="bi bi-arrow-right-short"></i>
+                {actionSummary(a)}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-2 text-secondary small">
+            {t(lang, "last_run")}: {routine.lastRunAt ? new Date(routine.lastRunAt).toLocaleString() : t(lang, "never")}
+          </div>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const getInitialLang = () => {
+        const match = document.cookie.match(/lang=([a-z]{2})/i);
+        const langVal = match?.[1];
+        return langVal && ["de", "en"].includes(langVal.toLowerCase()) ? langVal.toLowerCase() : "de";
+      };
+
+      const [lang, setLang] = useState(getInitialLang);
+      const [routines, setRoutines] = useState([]);
+      const [devices, setDevices] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState("");
+      const [saving, setSaving] = useState(false);
+      const [form, setForm] = useState({
+        name: "",
+        triggerType: "time",
+        time: "",
+        days: [],
+        intervalMinutes: 5,
+        actions: [{ id: genId(), deviceId: "", type: "switch_on", value: 100 }]
+      });
+
+      useEffect(() => {
+        document.cookie = `lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+      }, [lang]);
+
+      const deviceLookup = useMemo(() => {
+        const map = {};
+        devices.forEach((d) => {
+          map[d.id] = d;
+        });
+        return map;
+      }, [devices]);
+
+      const loadData = useCallback(async () => {
+        setLoading(true);
+        setError("");
+        try {
+          const auth = await authClient.status();
+          if (!auth.authenticated) {
+            window.location.href = "/";
+            return;
+          }
+          const [routineRes, deviceRes] = await Promise.all([routineClient.list(), smartLifeClient.listDevices()]);
+          setRoutines(routineRes.routines || []);
+          setDevices(deviceRes || []);
+        } catch (e) {
+          setError(e.message || t(lang, "error_load"));
+        } finally {
+          setLoading(false);
+        }
+      }, [lang]);
+
+      useEffect(() => {
+        loadData();
+      }, [loadData]);
+
+      const buildActionPayload = (action) => {
+        const device = deviceLookup[action.deviceId];
+        const sourceId = device?.sourceId;
+        const deviceName = device?.name;
+        if (action.type === "switch_on") {
+          return { type: "device_toggle", deviceId: action.deviceId, desiredState: true, sourceId, deviceName };
+        }
+        if (action.type === "switch_off") {
+          return { type: "device_toggle", deviceId: action.deviceId, desiredState: false, sourceId, deviceName };
+        }
+        if (action.type === "level") {
+          const lvl = Math.max(0, Math.min(100, Number(action.value) || 0));
+          return { type: "device_command", deviceId: action.deviceId, capability: "switchLevel", command: "setLevel", arguments: [lvl], sourceId, deviceName };
+        }
+        if (action.type === "temp") {
+          const temp = Math.max(5, Math.min(35, Number(action.value) || 20));
+          return { type: "device_command", deviceId: action.deviceId, capability: "thermostatHeatingSetpoint", command: "setHeatingSetpoint", arguments: [temp], sourceId, deviceName };
+        }
+        if (action.type === "custom") {
+          const capability = (action.capability || "").trim();
+          const command = (action.command || "").trim();
+          const args = Array.isArray(action.arguments) ? action.arguments : [];
+          return { type: "device_command", deviceId: action.deviceId, capability, command, arguments: args, sourceId, deviceName };
+        }
+        return null;
+      };
+
+      const updateAction = (id, partial) => {
+        setForm((prev) => ({
+          ...prev,
+          actions: prev.actions.map((a) => (a.id === id ? { ...a, ...partial } : a))
+        }));
+      };
+
+      const addAction = () => {
+        setForm((prev) => ({
+          ...prev,
+          actions: [...prev.actions, { id: genId(), deviceId: "", type: "switch_on", value: 100 }]
+        }));
+      };
+
+      const removeAction = (id) => {
+        setForm((prev) => ({
+          ...prev,
+          actions: prev.actions.length > 1 ? prev.actions.filter((a) => a.id !== id) : prev.actions
+        }));
+      };
+
+      const handleCreate = async () => {
+        if (!form.name.trim() || !(form.actions || []).length) {
+          setError(t(lang, "validation"));
+          return;
+        }
+        const preparedActions = [];
+        for (const a of form.actions) {
+          if (!a.deviceId) continue;
+          const built = buildActionPayload(a);
+          if (built) preparedActions.push(built);
+        }
+        if (!preparedActions.length) {
+          setError(t(lang, "validation"));
+          return;
+        }
+
+        let trigger;
+        if (form.triggerType === "time") {
+          if (!form.time) {
+            setError(t(lang, "validation"));
+            return;
+          }
+          trigger = { type: "time", time: form.time, days: form.days };
+        } else if (form.triggerType === "interval") {
+          const minutes = Math.max(1, Math.min(1440, Number(form.intervalMinutes) || 0));
+          if (!minutes) {
+            setError(t(lang, "validation"));
+            return;
+          }
+          trigger = { type: "interval", everyMinutes: minutes };
+        } else {
+          setError(t(lang, "validation"));
+          return;
+        }
+
+        setSaving(true);
+        setError("");
+        try {
+          const payload = {
+            name: form.name.trim(),
+            enabled: true,
+            trigger,
+            actions: preparedActions
+          };
+          const res = await routineClient.create(payload);
+          setRoutines((prev) => [...prev, res.routine]);
+          setForm({
+            name: "",
+            triggerType: "time",
+            time: "",
+            days: [],
+            intervalMinutes: 5,
+            actions: [{ id: genId(), deviceId: "", type: "switch_on", value: 100 }]
+          });
+        } catch (e) {
+          setError(e.message || t(lang, "error_save"));
+        } finally {
+          setSaving(false);
+        }
+      };
+
+      const toggleRoutine = async (routine) => {
+        try {
+          const res = await routineClient.update(routine.id, { enabled: !routine.enabled });
+          setRoutines((prev) => prev.map((r) => (r.id === routine.id ? res.routine : r)));
+        } catch (e) {
+          setError(e.message || t(lang, "error_save"));
+        }
+      };
+
+      const runRoutine = async (id) => {
+        try {
+          const res = await routineClient.run(id);
+          if (res.routine) {
+            setRoutines((prev) => prev.map((r) => (r.id === id ? res.routine : r)));
+          }
+        } catch (e) {
+          setError(e.message || t(lang, "error_run"));
+        }
+      };
+
+      const deleteRoutine = async (id) => {
+        try {
+          await routineClient.remove(id);
+          setRoutines((prev) => prev.filter((r) => r.id !== id));
+        } catch (e) {
+          setError(e.message || t(lang, "error_delete"));
+        }
+      };
+
+      const sortedRoutines = useMemo(() => {
+        return [...routines].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      }, [routines]);
+
+      const previewText = useMemo(() => {
+        if (form.triggerType === "time" && !form.time) return "";
+        const parts = (form.actions || []).map((a) => {
+          const device = deviceLookup[a.deviceId];
+          const name = device?.name || t(lang, "device_placeholder");
+          if (a.type === "switch_on") return `${name} ${t(lang, "action_on")}`;
+          if (a.type === "switch_off") return `${name} ${t(lang, "action_off")}`;
+          if (a.type === "level") return `${name} ${t(lang, "action_level")} ${a.value ?? ""}`;
+          if (a.type === "temp") return `${name} ${t(lang, "action_temp")} ${a.value ?? ""}`;
+          if (a.type === "custom") return `${name} ${a.capability || ""}.${a.command || ""}`;
+          return name;
+        });
+        let triggerText = "";
+        if (form.triggerType === "time") {
+          const dayLabel = (form.days || []).length ? ` (${form.days.map((d) => t(lang, `day_${d}`)).join(",")})` : "";
+          triggerText = `${t(lang, "preview_prefix")} ${form.time}${dayLabel}`;
+        } else {
+          triggerText = `${t(lang, "preview_prefix")} alle ${form.intervalMinutes || 5} min`;
+        }
+        return `${triggerText} ${t(lang, "preview_then")} ${parts.join(" • ")}`;
+      }, [form.triggerType, form.time, form.intervalMinutes, form.days, form.actions, deviceLookup, lang]);
+
+      if (loading) {
+        return <div className="text-center py-5 text-secondary">{t(lang, "loading")}</div>;
+      }
+
+      return (
+        <div className="mb-5">
+          <div className="hero mb-4">
+            <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
+              <div>
+                <p className="mb-1 text-uppercase text-light small fw-semibold" style={{ letterSpacing: "0.06em" }}>WeepHub Automations</p>
+                <h1 className="fw-bold mb-1">{t(lang, "title")}</h1>
+                <p className="text-secondary mb-0" style={{ maxWidth: "760px" }}>{t(lang, "subtitle")}</p>
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                <LangToggle lang={lang} setLang={setLang} />
+                <a className="ghost-button" href="/dashboard">
+                  <i className="bi bi-arrow-left"></i>
+                  {t(lang, "back_dashboard")}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          <div className="glass-card mb-3">
+            <div className="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+              <div>
+                <div className="fw-semibold">{t(lang, "builder_title")}</div>
+                <div className="text-secondary small">{t(lang, "builder_sub")}</div>
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">{t(lang, "name_label")}</label>
+              <input className="form-control" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div className="block-row mb-3">
+              <div className="block" style={{ flexWrap: "wrap" }}>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <span className="block-label">{t(lang, "trigger_type")}</span>
+                  <div style={{ width: "220px" }}>
+                    <MenuSelect
+                      value={form.triggerType}
+                      onChange={(val) => setForm((p) => ({ ...p, triggerType: val }))}
+                      options={[
+                        { value: "time", label: t(lang, "trigger_type_time") },
+                        { value: "interval", label: t(lang, "trigger_type_interval") }
+                      ]}
+                    />
+                  </div>
+                </div>
+                {form.triggerType === "time" && (
+                  <div className="d-flex flex-wrap align-items-center gap-2">
+                    <input
+                      type="time"
+                      className="form-control form-control-sm"
+                      value={form.time}
+                      onChange={(e) => setForm((p) => ({ ...p, time: e.target.value }))}
+                      style={{ width: "140px" }}
+                    />
+                    <div className="d-flex flex-wrap gap-1">
+                      {[0, 1, 2, 3, 4, 5, 6].map((d) => {
+                        const active = (form.days || []).includes(d);
+                        return (
+                          <button
+                            type="button"
+                            key={d}
+                            className={`btn btn-sm ${active ? "btn-primary" : "btn-outline-light"}`}
+                            onClick={() =>
+                              setForm((p) => {
+                                const set = new Set(p.days || []);
+                                if (set.has(d)) set.delete(d); else set.add(d);
+                                return { ...p, days: Array.from(set) };
+                              })
+                            }
+                          >
+                            {t(lang, `day_${d}`)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {form.triggerType === "interval" && (
+                  <div className="d-flex align-items-center gap-2">
+                    <span className="block-label">{t(lang, "trigger_interval_minutes")}</span>
+                    <input
+                      type="number"
+                      className="form-control form-control-sm"
+                      style={{ width: "120px" }}
+                      min="1"
+                      max="1440"
+                      value={form.intervalMinutes}
+                      onChange={(e) => setForm((p) => ({ ...p, intervalMinutes: Math.max(1, Math.min(1440, Number(e.target.value) || 1)) }))}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="mb-2">
+              <div className="fw-semibold mb-2">{t(lang, "preview_then")}</div>
+              {form.actions.map((a, idx) => {
+                const device = deviceLookup[a.deviceId];
+                const actionTypeLabel = (() => {
+                  if (a.type === "switch_on") return t(lang, "action_on");
+                  if (a.type === "switch_off") return t(lang, "action_off");
+                  if (a.type === "level") return t(lang, "action_level");
+                  if (a.type === "temp") return t(lang, "action_temp");
+                  return t(lang, "action_custom");
+                })();
+                return (
+                  <div className="block mb-2 w-100" key={a.id} style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
+                    <div className="d-flex flex-wrap gap-2 w-100 align-items-center">
+                      <div style={{ minWidth: "220px", flex: "1" }}>
+                        <MenuSelect
+                          value={a.deviceId}
+                          onChange={(val) => updateAction(a.id, { deviceId: val })}
+                          placeholder={t(lang, "device_placeholder")}
+                          options={devices.map((d) => ({
+                            value: d.id,
+                            label: d.name,
+                            hint: d.room || d.type
+                          }))}
+                        />
+                      </div>
+                      <div style={{ width: "180px" }}>
+                        <MenuSelect
+                          value={a.type}
+                          onChange={(val) => updateAction(a.id, { type: val })}
+                          options={[
+                            { value: "switch_on", label: t(lang, "action_on") },
+                            { value: "switch_off", label: t(lang, "action_off") },
+                            { value: "level", label: t(lang, "action_level") },
+                            { value: "temp", label: t(lang, "action_temp") },
+                            { value: "custom", label: t(lang, "action_custom") }
+                          ]}
+                        />
+                      </div>
+                      {(a.type === "level" || a.type === "temp") && (
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          style={{ width: "120px" }}
+                          value={a.value ?? ""}
+                          onChange={(e) => updateAction(a.id, { value: e.target.value })}
+                          placeholder={a.type === "level" ? "0-100" : "Temp"}
+                        />
+                      )}
+                      {a.type === "custom" && (
+                        <>
+                          <input
+                            className="form-control form-control-sm"
+                            style={{ width: "180px" }}
+                            placeholder="capability"
+                            value={a.capability || ""}
+                            onChange={(e) => updateAction(a.id, { capability: e.target.value })}
+                          />
+                          <input
+                            className="form-control form-control-sm"
+                            style={{ width: "160px" }}
+                            placeholder="command"
+                            value={a.command || ""}
+                            onChange={(e) => updateAction(a.id, { command: e.target.value })}
+                          />
+                          <input
+                            className="form-control form-control-sm"
+                            style={{ width: "160px" }}
+                            placeholder="args comma sep"
+                            value={(a.arguments || []).join(",")}
+                            onChange={(e) =>
+                              updateAction(a.id, {
+                                arguments: e.target.value
+                                  .split(",")
+                                  .map((v) => v.trim())
+                                  .filter((v) => v !== "")
+                                  .map((v) => {
+                                    const num = Number(v);
+                                    return Number.isFinite(num) ? num : v;
+                                  })
+                              })
+                            }
+                          />
+                        </>
+                      )}
+                      {form.actions.length > 1 && (
+                        <button className="btn btn-sm btn-outline-danger" onClick={() => removeAction(a.id)}>
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      )}
+                    </div>
+                    <div className="text-secondary small w-100">
+                      {device ? `${device.name}${device.room ? ` • ${device.room}` : ""}` : t(lang, "device_placeholder")} • {actionTypeLabel}
+                    </div>
+                  </div>
+                );
+              })}
+              <button className="add-action-btn" onClick={addAction}>
+                <i className="bi bi-plus-lg"></i> {t(lang, "add_action")}
+              </button>
+            </div>
+            {previewText && <div className="text-secondary small mb-2">{previewText}</div>}
+            <button className="btn add-button" onClick={handleCreate} disabled={saving}>
+              {saving ? t(lang, "creating") : t(lang, "btn_create")}
+            </button>
+          </div>
+
+          <div className="glass-card">
+            <div className="d-flex align-items-center justify-content-between mb-2">
+              <div className="fw-semibold">{t(lang, "list_title")}</div>
+              <span className="badge rounded-pill" style={{ background: "rgba(255,255,255,0.08)", color: "#dfe6f4" }}>
+                {sortedRoutines.length} Items
+              </span>
+            </div>
+            {sortedRoutines.length === 0 ? (
+              <div className="text-secondary">{t(lang, "empty")}</div>
+            ) : (
+              sortedRoutines.map((routine) => (
+                <RoutineCard
+                  key={routine.id}
+                  routine={routine}
+                  lang={lang}
+                  deviceLookup={deviceLookup}
+                  onToggle={toggleRoutine}
+                  onRun={runRoutine}
+                  onDelete={deleteRoutine}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
